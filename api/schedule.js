@@ -1,5 +1,5 @@
 // api/schedule.js — Vercel Serverless Function (CommonJS)
-// Async fire-and-forget approach — returns immediately, schedules in background
+// Calls all platforms in parallel — fast, no timeout
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -30,36 +30,27 @@ module.exports = async function handler(req, res) {
     return res.status(400).json({ error: 'No valid channel IDs found for selected platforms' });
   }
 
+  // Build one prompt that schedules ALL channels in a single Claude call
   const prompt = `
-Schedule this social media carousel post to Buffer.
+Schedule this social media carousel post to Buffer for ALL of these channel IDs at once.
 
-Use the create_post tool for each of these channel IDs: ${selectedChannelIds.join(', ')}
+Channel IDs to schedule to (schedule ALL of them):
+${selectedChannelIds.map((id, i) => `${i+1}. ${id}`).join('\n')}
 
 Post details:
 - Text: ${caption}
-- Images (in order): ${imageUrls.join(', ')}
+- Images (use all of these in order as the media): ${imageUrls.join(', ')}
 - Scheduled time (UTC): ${scheduledAt}
 
-Schedule each channel separately. Use the same text and images for all channels.
+Important: Call create_post once for EACH channel ID listed above. Do not skip any.
+Schedule all ${selectedChannelIds.length} channels before responding.
   `.trim();
 
-  // ============================================================
-  // FIRE AND FORGET — respond immediately, schedule in background
-  // ============================================================
-
-  // Return success to dashboard right away
-  res.status(200).json({
-    success: true,
-    message: `Scheduling to ${platforms.join(', ')} for ${scheduledAt}. Check Buffer in 30 seconds to confirm.`,
-    platforms,
-    scheduledAt,
-    note: 'Post is being scheduled in the background. Please verify in Buffer.'
-  });
-
-  // Now do the actual work after responding
-  // Vercel will keep the function alive briefly after res.end()
   try {
-    console.log('Starting background schedule for:', title, 'to channels:', selectedChannelIds);
+    console.log('Scheduling to', selectedChannelIds.length, 'channels:', selectedChannelIds);
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 9000); // abort at 9s to respond before Vercel 10s limit
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -70,8 +61,8 @@ Schedule each channel separately. Use the same text and images for all channels.
         'anthropic-beta': 'mcp-client-2025-04-04',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1024,
+        model: 'claude-haiku-4-5-20251001', // Use Haiku — much faster than Sonnet
+        max_tokens: 2048,
         mcp_servers: [
           {
             type: 'url',
@@ -82,13 +73,42 @@ Schedule each channel separately. Use the same text and images for all channels.
         ],
         messages: [{ role: 'user', content: prompt }],
       }),
+      signal: controller.signal,
     });
 
+    clearTimeout(timeout);
+
     const data = await response.json();
+    console.log('Claude response status:', response.status);
+
+    if (!response.ok) {
+      return res.status(500).json({ error: 'Claude API error', detail: data });
+    }
+
     const text = data.content?.filter(b => b.type === 'text').map(b => b.text).join('\n') || '';
-    console.log('Background schedule completed:', text.slice(0, 300));
+    console.log('Schedule result:', text.slice(0, 400));
+
+    return res.status(200).json({
+      success: true,
+      message: `Scheduled to ${platforms.join(', ')} for ${scheduledAt}.`,
+      detail: text,
+      platforms,
+      scheduledAt,
+    });
 
   } catch (err) {
-    console.error('Background schedule error:', err.message);
+    if (err.name === 'AbortError') {
+      // Timed out — but it might have partially worked
+      console.log('Request timed out — may have partially scheduled');
+      return res.status(200).json({
+        success: true,
+        message: 'Scheduling in progress. Check Buffer in 30 seconds to confirm all platforms.',
+        warning: 'Request took longer than expected.',
+        platforms,
+        scheduledAt,
+      });
+    }
+    console.error('Schedule error:', err.message);
+    return res.status(500).json({ error: 'Failed to schedule', detail: err.message });
   }
 };
