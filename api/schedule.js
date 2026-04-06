@@ -1,5 +1,3 @@
-// api/schedule.js — Buffer GraphQL API (final correct schema)
-
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -30,41 +28,18 @@ module.exports = async function handler(req, res) {
     return res.status(400).json({ error: 'No valid channel IDs found' });
   }
 
-  // First introspect the image input type name
-  const introQuery = `
-    query {
-      assetsInput: __type(name: "AssetsInput") {
-        inputFields {
-          name
-          type {
-            name kind
-            ofType { name kind ofType { name kind } }
-          }
-        }
-      }
-    }
-  `;
-
+  // Introspect ShareMode enum values
   const introRes = await fetch('https://api.buffer.com/graphql', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${BUFFER_API_KEY}` },
-    body: JSON.stringify({ query: introQuery }),
+    body: JSON.stringify({ query: `query { __type(name: "ShareMode") { enumValues { name } } }` }),
   });
   const introData = await introRes.json();
-  const imageField = introData?.data?.assetsInput?.inputFields?.find(f => f.name === 'images');
-  const imageTypeName = imageField?.type?.ofType?.ofType?.name || imageField?.type?.ofType?.name;
-  console.log('Image type name:', imageTypeName);
+  const shareModes = introData?.data?.__type?.enumValues?.map(e => e.name) || [];
+  console.log('ShareMode enum values:', shareModes);
 
-  // Now introspect the image item type
-  const imageTypeQuery = `query { __type(name: "${imageTypeName}") { inputFields { name type { name kind } } } }`;
-  const imgTypeRes = await fetch('https://api.buffer.com/graphql', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${BUFFER_API_KEY}` },
-    body: JSON.stringify({ query: imageTypeQuery }),
-  });
-  const imgTypeData = await imgTypeRes.json();
-  const imageTypeFields = imgTypeData?.data?.__type?.inputFields?.map(f => f.name) || [];
-  console.log('Image type fields:', imageTypeFields);
+  // Pick first available mode
+  const mode = shareModes[0] || 'STANDARD';
 
   const results = await Promise.all(
     selectedChannels.map(async ({ platform, id }) => {
@@ -79,35 +54,22 @@ module.exports = async function handler(req, res) {
           }
         `;
 
-        // assets.images is an array of image objects
-        // Common fields are usually: url, type or just url
-        const imageObjects = imageUrls.map(url => {
-          if (imageTypeFields.includes('url') && imageTypeFields.includes('type')) {
-            return { url, type: 'IMAGE' };
-          }
-          return { url };
-        });
-
         const variables = {
           input: {
             channelId: id,
             schedulingType: 'notification',
             dueAt: scheduledAt,
             text: caption,
+            mode,
             assets: {
-              images: imageObjects,
+              images: imageUrls.map(url => ({ url })),
             },
           }
         };
 
-        console.log(`Sending to ${platform}:`, JSON.stringify(variables).slice(0, 300));
-
         const r = await fetch('https://api.buffer.com/graphql', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${BUFFER_API_KEY}`,
-          },
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${BUFFER_API_KEY}` },
           body: JSON.stringify({ query: mutation, variables }),
         });
 
@@ -121,7 +83,6 @@ module.exports = async function handler(req, res) {
         return { platform, success: true, postId: data.data?.createPost?.post?.id };
 
       } catch (err) {
-        console.error(`Buffer ${platform} error:`, err.message);
         return { platform, success: false, error: err.message };
       }
     })
