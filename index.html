@@ -3,508 +3,118 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SuperSub — Carousel Review Dashboard</title>
+<title>SuperSub — Carousel Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --navy: #011648;
-    --blue: #276ce9;
-    --mist: #f0f4fd;
-    --white: #ffffff;
-    --gray: #f5f6f8;
-    --border: rgba(1,22,72,0.1);
-    --text: #011648;
-    --text-muted: #6b7a99;
+    --navy:#011648; --blue:#276ce9; --mist:#f0f4fd;
+    --white:#ffffff; --gray:#f2f3f5;
+    --border:rgba(1,22,72,0.1); --text:#011648; --muted:#7a8aaa;
   }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'Inter',sans-serif;background:var(--gray);color:var(--text);min-height:100vh;}
 
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+  nav{background:var(--navy);height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 32px;position:sticky;top:0;z-index:200;}
+  .nav-logo{font-size:17px;font-weight:600;color:#fff;letter-spacing:-0.04em;}
+  .nav-logo span{color:var(--blue);}
+  .nav-right{font-size:13px;color:rgba(255,255,255,0.45);}
 
-  body {
-    font-family: 'Inter', sans-serif;
-    background: var(--gray);
-    color: var(--text);
-    min-height: 100vh;
-  }
+  .page-header{background:var(--white);border-bottom:1px solid var(--border);padding:28px 32px 24px;display:flex;align-items:flex-end;justify-content:space-between;gap:20px;}
+  .page-header h1{font-size:24px;font-weight:600;letter-spacing:-0.05em;margin-bottom:4px;}
+  .page-header p{font-size:13px;color:var(--muted);}
+  .stats{display:flex;gap:28px;flex-shrink:0;}
+  .stat{text-align:right;}
+  .stat-n{font-size:28px;font-weight:600;letter-spacing:-0.05em;color:var(--navy);line-height:1;}
+  .stat-l{font-size:11px;color:var(--muted);margin-top:2px;}
 
-  /* NAV */
-  nav {
-    background: var(--navy);
-    padding: 0 40px;
-    height: 60px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-  }
-  .nav-logo {
-    font-size: 18px;
-    font-weight: 600;
-    color: var(--white);
-    letter-spacing: -0.04em;
-  }
-  .nav-logo span { color: var(--blue); }
-  .nav-meta {
-    font-size: 13px;
-    color: rgba(255,255,255,0.5);
-    font-weight: 400;
-  }
+  .grid-wrap{padding:28px 32px;max-width:1400px;margin:0 auto;}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;}
 
-  /* HEADER */
-  .header {
-    background: var(--white);
-    border-bottom: 1px solid var(--border);
-    padding: 32px 40px 28px;
-  }
-  .header h1 {
-    font-size: 26px;
-    font-weight: 600;
-    letter-spacing: -0.05em;
-    color: var(--navy);
-    margin-bottom: 6px;
-  }
-  .header p {
-    font-size: 14px;
-    color: var(--text-muted);
-    font-weight: 400;
-  }
-  .header-stats {
-    display: flex;
-    gap: 24px;
-    margin-top: 20px;
-  }
-  .stat {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-  .stat-num {
-    font-size: 22px;
-    font-weight: 600;
-    letter-spacing: -0.04em;
-    color: var(--navy);
-  }
-  .stat-label {
-    font-size: 12px;
-    color: var(--text-muted);
-    font-weight: 400;
-  }
+  .card{background:var(--white);border-radius:12px;border:1px solid var(--border);overflow:hidden;cursor:pointer;transition:transform 0.18s ease,box-shadow 0.18s ease;}
+  .card:hover{transform:translateY(-3px);box-shadow:0 10px 36px rgba(1,22,72,0.12);}
 
-  /* MAIN GRID */
-  .main {
-    padding: 32px 40px;
-    max-width: 1400px;
-    margin: 0 auto;
-  }
+  .card-img{position:relative;width:100%;aspect-ratio:4/5;background:#1a1a2e;overflow:hidden;}
+  .card-img img{width:100%;height:100%;object-fit:cover;}
+  .card-badge{position:absolute;bottom:10px;left:10px;background:rgba(1,22,72,0.75);color:#fff;font-size:10px;font-weight:600;padding:3px 8px;border-radius:5px;letter-spacing:0.03em;backdrop-filter:blur(4px);}
+  .card-slides-count{position:absolute;bottom:10px;right:10px;background:rgba(0,0,0,0.5);color:#fff;font-size:10px;padding:3px 8px;border-radius:5px;backdrop-filter:blur(4px);}
 
-  /* LOADING / ERROR */
-  .loading-state {
-    text-align: center;
-    padding: 80px 20px;
-    color: var(--text-muted);
-    font-size: 15px;
-  }
-  .loading-state .spinner {
-    width: 32px;
-    height: 32px;
-    border: 2.5px solid var(--border);
-    border-top-color: var(--blue);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-    margin: 0 auto 16px;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
+  .card-body{padding:14px 16px 16px;}
+  .card-title{font-size:14px;font-weight:600;letter-spacing:-0.03em;margin-bottom:4px;line-height:1.3;}
+  .card-sub{font-size:12px;color:var(--muted);}
+  .card-date{font-size:11px;color:var(--muted);margin-top:8px;}
 
-  .error-banner {
-    background: #fff3f3;
-    border: 1px solid #ffd0d0;
-    border-radius: 10px;
-    padding: 16px 20px;
-    font-size: 14px;
-    color: #c0392b;
-    margin-bottom: 24px;
-    display: none;
-  }
+  .loading{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 20px;gap:14px;color:var(--muted);font-size:14px;}
+  .spinner{width:28px;height:28px;border:2px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin 0.7s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
 
-  /* CAROUSEL CARDS GRID */
-  .carousels-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-    gap: 24px;
-  }
+  .error-box{background:#fff3f3;border:1px solid #ffd0d0;border-radius:10px;padding:16px 20px;font-size:13px;color:#c0392b;margin-bottom:20px;display:none;}
 
-  /* CAROUSEL CARD */
-  .carousel-card {
-    background: var(--white);
-    border-radius: 14px;
-    border: 1px solid var(--border);
-    overflow: hidden;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-  }
-  .carousel-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 32px rgba(1,22,72,0.1);
-  }
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(1,22,72,0.55);z-index:500;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(3px);}
+  .modal-overlay.open{display:flex;}
 
-  /* PHONE MOCKUP */
-  .phone-wrap {
-    background: var(--mist);
-    padding: 24px;
-    display: flex;
-    justify-content: center;
-  }
-  .phone {
-    width: 200px;
-    background: #111;
-    border-radius: 28px;
-    padding: 8px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.25);
-    position: relative;
-  }
-  .phone-notch {
-    width: 60px;
-    height: 6px;
-    background: #333;
-    border-radius: 3px;
-    margin: 0 auto 6px;
-  }
-  .phone-screen {
-    border-radius: 22px;
-    overflow: hidden;
-    background: #000;
-    position: relative;
-    aspect-ratio: 4/5;
-  }
+  .modal{background:var(--white);border-radius:16px;width:100%;max-width:900px;max-height:92vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 24px 80px rgba(1,22,72,0.25);}
 
-  /* INSTAGRAM MOCK INSIDE PHONE */
-  .ig-header {
-    background: #fff;
-    padding: 8px 10px 6px;
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    border-bottom: 0.5px solid #e0e0e0;
-  }
-  .ig-avatar {
-    width: 26px;
-    height: 26px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--navy), var(--blue));
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 8px;
-    font-weight: 600;
-    color: white;
-    flex-shrink: 0;
-  }
-  .ig-username {
-    font-size: 10px;
-    font-weight: 600;
-    color: #111;
-    letter-spacing: -0.02em;
-  }
-  .ig-dots {
-    margin-left: auto;
-    font-size: 14px;
-    color: #888;
-    line-height: 1;
-  }
+  .modal-header{background:var(--navy);padding:16px 24px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+  .modal-title{font-size:15px;font-weight:600;color:#fff;letter-spacing:-0.03em;}
+  .modal-close{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,0.15);border:none;color:#fff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.2s;flex-shrink:0;}
+  .modal-close:hover{background:rgba(255,255,255,0.25);}
 
-  /* SLIDE VIEWER */
-  .slide-viewer {
-    position: relative;
-    aspect-ratio: 4/5;
-    background: #1a1a1a;
-    overflow: hidden;
-  }
-  .slide-img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: none;
-    animation: fadeIn 0.3s ease;
-  }
-  .slide-img.active { display: block; }
-  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .modal-body{display:grid;grid-template-columns:1fr 1fr;flex:1;overflow:hidden;}
 
-  .slide-placeholder {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #444;
-    font-size: 11px;
-    font-weight: 400;
-  }
+  .modal-slides{background:#0d0d1a;position:relative;display:flex;flex-direction:column;}
+  .modal-slide-view{flex:1;position:relative;overflow:hidden;aspect-ratio:4/5;}
+  .modal-slide-view img{width:100%;height:100%;object-fit:cover;display:none;animation:fadeIn 0.25s ease;}
+  .modal-slide-view img.active{display:block;}
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 
-  /* SLIDE DOTS */
-  .slide-dots {
-    position: absolute;
-    top: 6px;
-    left: 0;
-    right: 0;
-    display: flex;
-    justify-content: center;
-    gap: 3px;
-    padding: 0 8px;
-  }
-  .slide-dot {
-    height: 2.5px;
-    flex: 1;
-    max-width: 28px;
-    background: rgba(255,255,255,0.35);
-    border-radius: 2px;
-    cursor: pointer;
-    transition: background 0.2s;
-  }
-  .slide-dot.active { background: rgba(255,255,255,0.95); }
+  .modal-slide-controls{display:flex;align-items:center;justify-content:center;gap:12px;padding:12px;background:#111;flex-shrink:0;}
+  .ms-btn{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.1);border:none;color:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.2s;}
+  .ms-btn:hover{background:rgba(255,255,255,0.2);}
+  .ms-dots{display:flex;gap:5px;align-items:center;}
+  .ms-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,0.3);cursor:pointer;transition:background 0.2s,transform 0.2s;}
+  .ms-dot.active{background:#fff;transform:scale(1.2);}
+  .ms-counter{font-size:12px;color:rgba(255,255,255,0.5);min-width:36px;text-align:center;}
 
-  /* SLIDE NAV ARROWS */
-  .slide-nav {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    background: rgba(255,255,255,0.15);
-    border: none;
-    color: white;
-    width: 22px;
-    height: 22px;
-    border-radius: 50%;
-    font-size: 10px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background 0.2s;
-    backdrop-filter: blur(4px);
-  }
-  .slide-nav:hover { background: rgba(255,255,255,0.3); }
-  .slide-nav.prev { left: 6px; }
-  .slide-nav.next { right: 6px; }
+  .modal-detail{display:flex;flex-direction:column;overflow:hidden;}
+  .modal-detail-scroll{flex:1;overflow-y:auto;padding:24px;}
 
-  /* SLIDE COUNTER BADGE */
-  .slide-counter {
-    position: absolute;
-    top: 16px;
-    right: 8px;
-    background: rgba(0,0,0,0.5);
-    color: white;
-    font-size: 9px;
-    padding: 2px 6px;
-    border-radius: 10px;
-    font-weight: 500;
-  }
+  .modal-tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:20px;}
+  .tag{font-size:11px;font-weight:500;padding:4px 10px;border-radius:20px;border:1px solid var(--border);color:var(--navy);background:var(--mist);letter-spacing:-0.01em;}
 
-  /* IG FOOTER INSIDE PHONE */
-  .ig-actions {
-    background: #fff;
-    padding: 6px 10px 4px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  .ig-action-icon {
-    font-size: 14px;
-    cursor: pointer;
-    opacity: 0.75;
-  }
-  .ig-bookmark { margin-left: auto; }
+  .detail-label{font-size:10px;font-weight:600;letter-spacing:0.08em;color:var(--muted);text-transform:uppercase;margin-bottom:8px;}
+  .caption-text{font-size:13px;line-height:1.75;color:var(--text);white-space:pre-wrap;margin-bottom:24px;border-left:2px solid var(--blue);padding-left:12px;}
 
-  /* CARD BODY */
-  .card-body {
-    padding: 20px;
-  }
-  .card-number {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    margin-bottom: 10px;
-  }
-  .card-num-badge {
-    background: var(--navy);
-    color: var(--white);
-    font-size: 10px;
-    font-weight: 600;
-    padding: 2px 8px;
-    border-radius: 4px;
-    letter-spacing: 0.04em;
-  }
-  .card-num-slides {
-    font-size: 12px;
-    color: var(--text-muted);
-  }
-  .card-title {
-    font-size: 15px;
-    font-weight: 600;
-    letter-spacing: -0.03em;
-    color: var(--navy);
-    margin-bottom: 10px;
-    line-height: 1.3;
-  }
+  .comments-list{display:flex;flex-direction:column;gap:10px;margin-bottom:16px;max-height:200px;overflow-y:auto;}
+  .comment-item{background:var(--mist);border-radius:8px;padding:10px 12px;}
+  .comment-top{display:flex;align-items:center;gap:8px;margin-bottom:4px;}
+  .comment-avatar{width:22px;height:22px;border-radius:50%;background:var(--navy);color:#fff;font-size:9px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .comment-author{font-size:12px;font-weight:600;color:var(--navy);}
+  .comment-time{font-size:10px;color:var(--muted);margin-left:auto;}
+  .comment-text{font-size:12px;color:var(--text);line-height:1.5;padding-left:30px;}
+  .no-comments{font-size:12px;color:var(--muted);font-style:italic;}
 
-  /* CAPTION SECTION */
-  .caption-toggle {
-    font-size: 12px;
-    color: var(--blue);
-    font-weight: 500;
-    cursor: pointer;
-    background: none;
-    border: none;
-    padding: 0;
-    margin-bottom: 8px;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-  }
-  .caption-toggle svg {
-    transition: transform 0.2s;
-  }
-  .caption-toggle.open svg { transform: rotate(180deg); }
+  .comment-form-wrap{border-top:1px solid var(--border);padding:16px 24px;background:var(--white);flex-shrink:0;}
+  .comment-form{display:flex;flex-direction:column;gap:8px;}
+  .comment-form input,.comment-form textarea{width:100%;border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-size:12px;font-family:'Inter',sans-serif;color:var(--text);outline:none;transition:border-color 0.2s;resize:none;background:var(--white);}
+  .comment-form input:focus,.comment-form textarea:focus{border-color:var(--blue);}
+  .comment-form textarea{height:72px;}
+  .form-row{display:flex;align-items:center;justify-content:space-between;gap:12px;}
+  .submit-btn{background:var(--blue);color:#fff;border:none;border-radius:8px;padding:8px 18px;font-size:12px;font-weight:500;font-family:'Inter',sans-serif;cursor:pointer;transition:opacity 0.2s;white-space:nowrap;}
+  .submit-btn:hover{opacity:0.85;}
+  .submit-btn:disabled{opacity:0.4;cursor:not-allowed;}
+  .success-msg{font-size:11px;color:#27ae60;font-weight:500;display:none;}
 
-  .caption-box {
-    background: var(--mist);
-    border-radius: 8px;
-    padding: 12px 14px;
-    font-size: 12px;
-    line-height: 1.7;
-    color: var(--text);
-    white-space: pre-wrap;
-    display: none;
-    margin-bottom: 14px;
-    max-height: 180px;
-    overflow-y: auto;
-  }
-  .caption-box.open { display: block; }
+  .empty{text-align:center;padding:80px 20px;color:var(--muted);}
+  .empty h3{font-size:15px;font-weight:500;color:var(--navy);margin-bottom:6px;}
 
-  /* COMMENTS SECTION */
-  .comments-section {
-    border-top: 1px solid var(--border);
-    padding-top: 14px;
-  }
-  .comments-title {
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--navy);
-    margin-bottom: 10px;
-    letter-spacing: -0.02em;
-  }
-  .comments-list {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    margin-bottom: 12px;
-    max-height: 160px;
-    overflow-y: auto;
-  }
-  .comment-item {
-    background: var(--mist);
-    border-radius: 8px;
-    padding: 8px 12px;
-    font-size: 12px;
-    line-height: 1.5;
-  }
-  .comment-author {
-    font-weight: 600;
-    color: var(--navy);
-    font-size: 11px;
-    margin-bottom: 2px;
-  }
-  .comment-text { color: var(--text); }
-  .comment-time {
-    font-size: 10px;
-    color: var(--text-muted);
-    margin-top: 3px;
-  }
-  .no-comments {
-    font-size: 12px;
-    color: var(--text-muted);
-    font-style: italic;
-    padding: 4px 0;
-  }
+  footer{text-align:center;padding:28px;font-size:12px;color:var(--muted);border-top:1px solid var(--border);margin-top:16px;}
 
-  /* COMMENT FORM */
-  .comment-form {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-  .comment-form input,
-  .comment-form textarea {
-    width: 100%;
-    border: 1px solid var(--border);
-    border-radius: 7px;
-    padding: 8px 12px;
-    font-size: 12px;
-    font-family: 'Inter', sans-serif;
-    color: var(--text);
-    background: var(--white);
-    outline: none;
-    transition: border-color 0.2s;
-    resize: none;
-  }
-  .comment-form input:focus,
-  .comment-form textarea:focus {
-    border-color: var(--blue);
-  }
-  .comment-form textarea { height: 68px; }
-  .comment-submit {
-    align-self: flex-end;
-    background: var(--blue);
-    color: var(--white);
-    border: none;
-    border-radius: 7px;
-    padding: 7px 16px;
-    font-size: 12px;
-    font-weight: 500;
-    font-family: 'Inter', sans-serif;
-    cursor: pointer;
-    transition: opacity 0.2s;
-    letter-spacing: -0.02em;
-  }
-  .comment-submit:hover { opacity: 0.85; }
-  .comment-submit:disabled { opacity: 0.5; cursor: not-allowed; }
-  .submit-success {
-    font-size: 11px;
-    color: #27ae60;
-    font-weight: 500;
-    display: none;
-  }
-
-  /* EMPTY STATE */
-  .empty-state {
-    text-align: center;
-    padding: 80px 20px;
-    color: var(--text-muted);
-  }
-  .empty-state h3 {
-    font-size: 16px;
-    font-weight: 500;
-    color: var(--navy);
-    margin-bottom: 8px;
-  }
-  .empty-state p { font-size: 13px; }
-
-  /* FOOTER */
-  footer {
-    text-align: center;
-    padding: 32px;
-    font-size: 12px;
-    color: var(--text-muted);
-    border-top: 1px solid var(--border);
-    margin-top: 40px;
-  }
-
-  /* RESPONSIVE */
-  @media (max-width: 600px) {
-    nav { padding: 0 20px; }
-    .header { padding: 24px 20px; }
-    .main { padding: 24px 20px; }
-    .carousels-grid { grid-template-columns: 1fr; }
+  @media(max-width:700px){
+    .modal-body{grid-template-columns:1fr;}
+    nav,.page-header,.grid-wrap{padding-left:20px;padding-right:20px;}
+    .stats{gap:16px;}
   }
 </style>
 </head>
@@ -512,322 +122,241 @@
 
 <nav>
   <div class="nav-logo">Super<span>Sub</span></div>
-  <div class="nav-meta">Carousel Review Dashboard</div>
+  <div class="nav-right">Carousel Dashboard</div>
 </nav>
 
-<div class="header">
-  <h1>Content Review</h1>
-  <p>Review carousel posts, check captions, and leave feedback before publishing.</p>
-  <div class="header-stats">
-    <div class="stat">
-      <div class="stat-num" id="total-carousels">—</div>
-      <div class="stat-label">Carousels</div>
-    </div>
-    <div class="stat">
-      <div class="stat-num" id="total-slides">—</div>
-      <div class="stat-label">Total Slides</div>
-    </div>
-    <div class="stat">
-      <div class="stat-num" id="total-comments">—</div>
-      <div class="stat-label">Comments</div>
-    </div>
+<div class="page-header">
+  <div>
+    <h1>Content Review</h1>
+    <p>Review carousel posts, check captions, and leave feedback before publishing.</p>
+  </div>
+  <div class="stats">
+    <div class="stat"><div class="stat-n" id="stat-carousels">—</div><div class="stat-l">Carousels</div></div>
+    <div class="stat"><div class="stat-n" id="stat-slides">—</div><div class="stat-l">Total Slides</div></div>
+    <div class="stat"><div class="stat-n" id="stat-comments">—</div><div class="stat-l">Comments</div></div>
   </div>
 </div>
 
-<div class="main">
-  <div class="error-banner" id="error-banner"></div>
-  <div class="loading-state" id="loading-state">
-    <div class="spinner"></div>
-    Loading carousels...
-  </div>
-  <div class="carousels-grid" id="carousels-grid" style="display:none;"></div>
-  <div class="empty-state" id="empty-state" style="display:none;">
-    <h3>No carousels yet</h3>
-    <p>Add your first carousel to Supabase and it'll appear here.</p>
-  </div>
+<div class="grid-wrap">
+  <div class="error-box" id="error-box"></div>
+  <div class="loading" id="loading"><div class="spinner"></div>Loading carousels...</div>
+  <div class="grid" id="grid" style="display:none;"></div>
+  <div class="empty" id="empty" style="display:none;"><h3>No carousels yet</h3><p>Add your first carousel to Supabase and it'll appear here.</p></div>
 </div>
 
-<footer>
-  SuperSub Limited · supersub.co.nz · Content Review Dashboard
-</footer>
+<footer>SuperSub Limited · supersub.co.nz · Content Review Dashboard</footer>
+
+<div class="modal-overlay" id="modal-overlay" onclick="closeOnOverlay(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title"></div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-slides">
+        <div class="modal-slide-view" id="modal-slide-view"></div>
+        <div class="modal-slide-controls">
+          <button class="ms-btn" id="ms-prev">‹</button>
+          <div class="ms-dots" id="ms-dots"></div>
+          <span class="ms-counter" id="ms-counter">1 / 1</span>
+          <button class="ms-btn" id="ms-next">›</button>
+        </div>
+      </div>
+      <div class="modal-detail">
+        <div class="modal-detail-scroll" id="modal-scroll">
+          <div class="modal-tags" id="modal-tags"></div>
+          <div class="detail-label">Caption</div>
+          <div class="caption-text" id="modal-caption"></div>
+          <div class="detail-label">Feedback (<span id="modal-cc">0</span>)</div>
+          <div class="comments-list" id="modal-comments"></div>
+        </div>
+        <div class="comment-form-wrap">
+          <div class="comment-form">
+            <input type="text" id="cf-name" placeholder="Your name" maxlength="60" />
+            <textarea id="cf-text" placeholder="Leave feedback about this carousel..." maxlength="500"></textarea>
+            <div class="form-row">
+              <span class="success-msg" id="cf-success">Comment posted!</span>
+              <button class="submit-btn" id="cf-btn" onclick="submitComment()">Post feedback</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <script>
-  // ============================================================
-  // CONFIG — Replace with your Supabase project URL and anon key
-  // ============================================================
-  const SUPABASE_URL = 'https://wljoyrwjculthelfgzth.supabase.co';
-  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indsam95cndqY3VsdGhlbGZnenRoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1ODM1MTEsImV4cCI6MjA5MDE1OTUxMX0.8f3NV96YP9jOj__W9XiEDIiJ2gFlyBK53wnQJ1Tp6X0';
+const SURL = 'https://wljoyrwjculthelfgzth.supabase.co';
+const SKEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indsam95cndqY3VsdGhlbGZnenRoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1ODM1MTEsImV4cCI6MjA5MDE1OTUxMX0.8f3NV96YP9jOj__W9XiEDIiJ2gFlyBK53wnQJ1Tp6X0';
+const SH = {'apikey':SKEY,'Authorization':`Bearer ${SKEY}`,'Content-Type':'application/json'};
 
-  const headers = {
-    'apikey': SUPABASE_ANON_KEY,
-    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-    'Content-Type': 'application/json'
-  };
+let D = {carousels:[],slides:[],comments:[]};
+let activeId = null, slideIdx = 0, slideList = [];
 
-  async function fetchJSON(url) {
-    const res = await fetch(url, { headers });
-    if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
-    return res.json();
+const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const ago = d => { const m=Math.floor((Date.now()-new Date(d))/60000); if(m<1)return'just now'; if(m<60)return`${m}m ago`; const h=Math.floor(m/60); if(h<24)return`${h}h ago`; return`${Math.floor(h/24)}d ago`; };
+const fmtDate = d => new Date(d).toLocaleDateString('en-NZ',{day:'numeric',month:'short',year:'numeric'});
+const initials = n => n.split(' ').map(w=>w[0]||'').join('').toUpperCase().slice(0,2)||'?';
+
+async function apiFetch(path) {
+  const r = await fetch(`${SURL}/rest/v1/${path}`,{headers:SH});
+  if(!r.ok) throw new Error(r.status);
+  return r.json();
+}
+async function apiPost(path,body) {
+  const r = await fetch(`${SURL}/rest/v1/${path}`,{method:'POST',headers:{...SH,'Prefer':'return=representation'},body:JSON.stringify(body)});
+  if(!r.ok) throw new Error(r.status);
+  return r.json();
+}
+
+function buildCard(carousel, slides) {
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.onclick = () => openModal(carousel.id);
+  const img = slides[0] ? `<img src="${esc(slides[0].image_url)}" alt="Cover" loading="lazy" />` : '';
+  card.innerHTML = `
+    <div class="card-img">
+      ${img}
+      <div class="card-badge">#${String(carousel.folder_number).padStart(2,'0')}</div>
+      <div class="card-slides-count">${slides.length} slides</div>
+    </div>
+    <div class="card-body">
+      <div class="card-title">${esc(carousel.title)}</div>
+      <div class="card-sub">Carousel ${carousel.folder_number}</div>
+      <div class="card-date">${fmtDate(carousel.created_at)}</div>
+    </div>`;
+  return card;
+}
+
+function openModal(id) {
+  const carousel = D.carousels.find(c=>c.id===id);
+  const slides = D.slides.filter(s=>s.carousel_id===id).sort((a,b)=>a.slide_order-b.slide_order);
+  const comments = D.comments.filter(c=>c.carousel_id===id);
+  activeId = id; slideList = slides; slideIdx = 0;
+
+  document.getElementById('modal-title').textContent = carousel.title;
+  document.getElementById('modal-tags').innerHTML = `
+    <span class="tag">#${String(carousel.folder_number).padStart(2,'0')}</span>
+    <span class="tag">${slides.length} slides</span>
+    <span class="tag">4:5</span>
+    <span class="tag">${fmtDate(carousel.created_at)}</span>`;
+  document.getElementById('modal-caption').textContent = carousel.caption || '';
+  document.getElementById('modal-slide-view').innerHTML = slides.map((s,i)=>`<img class="${i===0?'active':''}" src="${esc(s.image_url)}" alt="Slide ${s.slide_order}" loading="lazy" />`).join('');
+  document.getElementById('ms-dots').innerHTML = slides.map((_,i)=>`<div class="ms-dot ${i===0?'active':''}" onclick="goSlide(${i})"></div>`).join('');
+  updateSlideUI();
+  renderComments(comments);
+
+  document.getElementById('ms-prev').onclick = () => goSlide(slideIdx-1);
+  document.getElementById('ms-next').onclick = () => goSlide(slideIdx+1);
+  document.getElementById('modal-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function goSlide(i) {
+  const imgs = document.querySelectorAll('#modal-slide-view img');
+  const dots = document.querySelectorAll('#ms-dots .ms-dot');
+  if(!imgs.length) return;
+  imgs[slideIdx].classList.remove('active');
+  dots[slideIdx].classList.remove('active');
+  slideIdx = ((i%slideList.length)+slideList.length)%slideList.length;
+  imgs[slideIdx].classList.add('active');
+  dots[slideIdx].classList.add('active');
+  updateSlideUI();
+}
+
+function updateSlideUI() {
+  document.getElementById('ms-counter').textContent = `${slideIdx+1} / ${slideList.length}`;
+}
+
+function renderComments(comments) {
+  document.getElementById('modal-cc').textContent = comments.length;
+  const list = document.getElementById('modal-comments');
+  if(!comments.length) {
+    list.innerHTML = '<div class="no-comments">No feedback yet. Be the first to comment.</div>';
+    return;
   }
+  list.innerHTML = comments.map(c=>`
+    <div class="comment-item">
+      <div class="comment-top">
+        <div class="comment-avatar">${initials(c.commenter_name)}</div>
+        <div class="comment-author">${esc(c.commenter_name)}</div>
+        <div class="comment-time">${ago(c.created_at)}</div>
+      </div>
+      <div class="comment-text">${esc(c.comment_text)}</div>
+    </div>`).join('');
+}
 
-  async function postJSON(url, body) {
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { ...headers, 'Prefer': 'return=representation' },
-      body: JSON.stringify(body)
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+  activeId = null;
+  document.getElementById('cf-name').value = '';
+  document.getElementById('cf-text').value = '';
+}
+
+function closeOnOverlay(e) { if(e.target===document.getElementById('modal-overlay')) closeModal(); }
+
+async function submitComment() {
+  if(!activeId) return;
+  const nameEl = document.getElementById('cf-name');
+  const textEl = document.getElementById('cf-text');
+  const btn = document.getElementById('cf-btn');
+  const ok = document.getElementById('cf-success');
+  const name = nameEl.value.trim()||'Anonymous';
+  const text = textEl.value.trim();
+  if(!text){ textEl.focus(); return; }
+  btn.disabled=true; btn.textContent='Posting...';
+  try {
+    await apiPost('comments2',{carousel_id:activeId,commenter_name:name,comment_text:text});
+    const nc = {carousel_id:activeId,commenter_name:name,comment_text:text,created_at:new Date().toISOString()};
+    D.comments.push(nc);
+    renderComments(D.comments.filter(c=>c.carousel_id===activeId));
+    const list = document.getElementById('modal-comments');
+    list.scrollTop = list.scrollHeight;
+    const sc = document.getElementById('stat-comments');
+    sc.textContent = parseInt(sc.textContent||0)+1;
+    nameEl.value=''; textEl.value='';
+    ok.style.display='inline';
+    setTimeout(()=>ok.style.display='none',3000);
+  } catch(e){ alert('Could not post comment. Please try again.'); }
+  btn.disabled=false; btn.textContent='Post feedback';
+}
+
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape') closeModal();
+  if(e.key==='ArrowLeft') goSlide(slideIdx-1);
+  if(e.key==='ArrowRight') goSlide(slideIdx+1);
+});
+
+async function init() {
+  const loadEl=document.getElementById('loading');
+  const gridEl=document.getElementById('grid');
+  const emptyEl=document.getElementById('empty');
+  const errEl=document.getElementById('error-box');
+  try {
+    const [carousels,slides,comments] = await Promise.all([
+      apiFetch('carousels2?select=*&order=folder_number.asc'),
+      apiFetch('slides2?select=*&order=carousel_id.asc,slide_order.asc'),
+      apiFetch('comments2?select=*&order=created_at.asc')
+    ]);
+    D = {carousels,slides,comments};
+    document.getElementById('stat-carousels').textContent = carousels.length;
+    document.getElementById('stat-slides').textContent = slides.length;
+    document.getElementById('stat-comments').textContent = comments.length;
+    loadEl.style.display='none';
+    if(!carousels.length){ emptyEl.style.display='block'; return; }
+    gridEl.style.display='grid';
+    carousels.forEach(c=>{
+      const s = slides.filter(sl=>sl.carousel_id===c.id).sort((a,b)=>a.slide_order-b.slide_order);
+      gridEl.appendChild(buildCard(c,s));
     });
-    if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
-    return res.json();
+  } catch(e){
+    loadEl.style.display='none';
+    errEl.style.display='block';
+    errEl.textContent=`Error loading data: ${e.message}. Check your Supabase credentials.`;
   }
-
-  function timeAgo(dateStr) {
-    const diff = Date.now() - new Date(dateStr).getTime();
-    const mins = Math.floor(diff / 60000);
-    if (mins < 1) return 'just now';
-    if (mins < 60) return `${mins}m ago`;
-    const hrs = Math.floor(mins / 60);
-    if (hrs < 24) return `${hrs}h ago`;
-    return `${Math.floor(hrs / 24)}d ago`;
-  }
-
-  function buildCarouselCard(carousel, slides, comments) {
-    const card = document.createElement('div');
-    card.className = 'carousel-card';
-    card.dataset.id = carousel.id;
-
-    const slideImgs = slides.map((s, i) => `
-      <img
-        class="slide-img ${i === 0 ? 'active' : ''}"
-        src="${s.image_url}"
-        alt="Slide ${s.slide_order}"
-        loading="lazy"
-        data-index="${i}"
-      />
-    `).join('');
-
-    const dots = slides.map((_, i) => `
-      <div class="slide-dot ${i === 0 ? 'active' : ''}" data-index="${i}"></div>
-    `).join('');
-
-    const commentItems = comments.length
-      ? comments.map(c => `
-        <div class="comment-item">
-          <div class="comment-author">${escHtml(c.commenter_name)}</div>
-          <div class="comment-text">${escHtml(c.comment_text)}</div>
-          <div class="comment-time">${timeAgo(c.created_at)}</div>
-        </div>
-      `).join('')
-      : `<div class="no-comments">No comments yet. Be the first to leave feedback.</div>`;
-
-    card.innerHTML = `
-      <div class="phone-wrap">
-        <div class="phone">
-          <div class="phone-notch"></div>
-          <div class="phone-screen">
-            <div class="ig-header">
-              <div class="ig-avatar">SS</div>
-              <div class="ig-username">supersub.co.nz</div>
-              <div class="ig-dots">···</div>
-            </div>
-            <div class="slide-viewer">
-              ${slides.length ? slideImgs : '<div class="slide-placeholder">No slides</div>'}
-              ${slides.length > 1 ? `
-                <div class="slide-dots">${dots}</div>
-                <div class="slide-counter">1 / ${slides.length}</div>
-                <button class="slide-nav prev" aria-label="Previous">‹</button>
-                <button class="slide-nav next" aria-label="Next">›</button>
-              ` : ''}
-            </div>
-            <div class="ig-actions">
-              <span class="ig-action-icon">♡</span>
-              <span class="ig-action-icon">💬</span>
-              <span class="ig-action-icon">↗</span>
-              <span class="ig-action-icon ig-bookmark">🔖</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="card-body">
-        <div class="card-number">
-          <span class="card-num-badge">#${String(carousel.folder_number).padStart(2,'0')}</span>
-          <span class="card-num-slides">${slides.length} slides</span>
-        </div>
-        <div class="card-title">${escHtml(carousel.title)}</div>
-
-        <button class="caption-toggle" onclick="toggleCaption(this)">
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-            <path d="M2 4l4 4 4-4" stroke="#276ce9" stroke-width="1.5" stroke-linecap="round"/>
-          </svg>
-          View caption
-        </button>
-        <div class="caption-box">${escHtml(carousel.caption || '')}</div>
-
-        <div class="comments-section">
-          <div class="comments-title">Feedback (${comments.length})</div>
-          <div class="comments-list" id="comments-list-${carousel.id}">${commentItems}</div>
-          <div class="comment-form">
-            <input type="text" placeholder="Your name" id="name-${carousel.id}" maxlength="60" />
-            <textarea placeholder="Leave feedback about this carousel..." id="text-${carousel.id}" maxlength="500"></textarea>
-            <div style="display:flex; align-items:center; gap:12px; justify-content:flex-end;">
-              <span class="submit-success" id="success-${carousel.id}">Comment posted!</span>
-              <button class="comment-submit" onclick="submitComment(${carousel.id}, this)">Post feedback</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
-
-    // Wire up slide navigation
-    if (slides.length > 1) {
-      let current = 0;
-
-      const viewer = card.querySelector('.slide-viewer');
-      const imgs = card.querySelectorAll('.slide-img');
-      const dotEls = card.querySelectorAll('.slide-dot');
-      const counter = card.querySelector('.slide-counter');
-
-      function goTo(idx) {
-        imgs[current].classList.remove('active');
-        dotEls[current].classList.remove('active');
-        current = (idx + slides.length) % slides.length;
-        imgs[current].classList.add('active');
-        dotEls[current].classList.add('active');
-        counter.textContent = `${current + 1} / ${slides.length}`;
-      }
-
-      card.querySelector('.slide-nav.next').addEventListener('click', () => goTo(current + 1));
-      card.querySelector('.slide-nav.prev').addEventListener('click', () => goTo(current - 1));
-      dotEls.forEach((d, i) => d.addEventListener('click', () => goTo(i)));
-    }
-
-    return card;
-  }
-
-  function toggleCaption(btn) {
-    const box = btn.nextElementSibling;
-    box.classList.toggle('open');
-    btn.classList.toggle('open');
-    btn.querySelector('span') && null;
-    const label = btn.querySelector('span') || btn;
-    if (box.classList.contains('open')) {
-      btn.childNodes[1] && (btn.childNodes[1].textContent = ' Hide caption');
-    }
-    // simpler: just toggle text
-    const isOpen = box.classList.contains('open');
-    const textNode = [...btn.childNodes].find(n => n.nodeType === 3);
-    if (textNode) textNode.textContent = isOpen ? ' Hide caption' : ' View caption';
-  }
-
-  async function submitComment(carouselId, btn) {
-    const nameEl = document.getElementById(`name-${carouselId}`);
-    const textEl = document.getElementById(`text-${carouselId}`);
-    const successEl = document.getElementById(`success-${carouselId}`);
-    const listEl = document.getElementById(`comments-list-${carouselId}`);
-
-    const name = nameEl.value.trim() || 'Anonymous';
-    const text = textEl.value.trim();
-    if (!text) { textEl.focus(); return; }
-
-    btn.disabled = true;
-    btn.textContent = 'Posting...';
-
-    try {
-      const res = await postJSON(
-        `${SUPABASE_URL}/rest/v1/comments2`,
-        { carousel_id: carouselId, commenter_name: name, comment_text: text }
-      );
-
-      // Remove "no comments" placeholder
-      const noComment = listEl.querySelector('.no-comments');
-      if (noComment) noComment.remove();
-
-      const newComment = document.createElement('div');
-      newComment.className = 'comment-item';
-      newComment.innerHTML = `
-        <div class="comment-author">${escHtml(name)}</div>
-        <div class="comment-text">${escHtml(text)}</div>
-        <div class="comment-time">just now</div>
-      `;
-      listEl.appendChild(newComment);
-      listEl.scrollTop = listEl.scrollHeight;
-
-      nameEl.value = '';
-      textEl.value = '';
-      successEl.style.display = 'inline';
-      setTimeout(() => successEl.style.display = 'none', 3000);
-
-      // Update comment count in header
-      const total = parseInt(document.getElementById('total-comments').textContent) || 0;
-      document.getElementById('total-comments').textContent = total + 1;
-
-    } catch(e) {
-      alert('Could not post comment. Check your Supabase config.');
-    }
-
-    btn.disabled = false;
-    btn.textContent = 'Post feedback';
-  }
-
-  function escHtml(str) {
-    return String(str)
-      .replace(/&/g,'&amp;')
-      .replace(/</g,'&lt;')
-      .replace(/>/g,'&gt;')
-      .replace(/"/g,'&quot;');
-  }
-
-  async function init() {
-    const loadingEl = document.getElementById('loading-state');
-    const gridEl = document.getElementById('carousels-grid');
-    const emptyEl = document.getElementById('empty-state');
-    const errorEl = document.getElementById('error-banner');
-
-    if (SUPABASE_URL === 'YOUR_SUPABASE_URL') {
-      loadingEl.style.display = 'none';
-      errorEl.style.display = 'block';
-      errorEl.textContent = 'Dashboard not configured yet. Add your SUPABASE_URL and SUPABASE_ANON_KEY to this file.';
-      return;
-    }
-
-    try {
-      const [carousels, slides, comments] = await Promise.all([
-        fetchJSON(`${SUPABASE_URL}/rest/v1/carousels2?select=*&order=folder_number.asc`),
-        fetchJSON(`${SUPABASE_URL}/rest/v1/slides2?select=*&order=carousel_id.asc,slide_order.asc`),
-        fetchJSON(`${SUPABASE_URL}/rest/v1/comments2?select=*&order=created_at.asc`)
-      ]);
-
-      loadingEl.style.display = 'none';
-
-      document.getElementById('total-carousels').textContent = carousels.length;
-      document.getElementById('total-slides').textContent = slides.length;
-      document.getElementById('total-comments').textContent = comments.length;
-
-      if (!carousels.length) {
-        emptyEl.style.display = 'block';
-        return;
-      }
-
-      gridEl.style.display = 'grid';
-
-      carousels.forEach(carousel => {
-        const carouselSlides = slides
-          .filter(s => s.carousel_id === carousel.id)
-          .sort((a,b) => a.slide_order - b.slide_order);
-        const carouselComments = comments
-          .filter(c => c.carousel_id === carousel.id);
-        const card = buildCarouselCard(carousel, carouselSlides, carouselComments);
-        gridEl.appendChild(card);
-      });
-
-    } catch(e) {
-      loadingEl.style.display = 'none';
-      errorEl.style.display = 'block';
-      errorEl.textContent = `Error loading data: ${e.message}. Check your Supabase URL and anon key.`;
-    }
-  }
-
-  init();
+}
+init();
 </script>
 </body>
 </html>
