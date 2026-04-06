@@ -1,4 +1,4 @@
-// api/schedule.js — introspect SchedulingType enum first
+// api/schedule.js — Buffer GraphQL API (correct schema)
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -30,47 +30,75 @@ module.exports = async function handler(req, res) {
     return res.status(400).json({ error: 'No valid channel IDs found' });
   }
 
-  // Step 1 — introspect SchedulingType and CreatePostInput to get exact field names
-  const introspectQuery = `
-    query {
-      schedulingType: __type(name: "SchedulingType") {
-        enumValues { name }
-      }
-      createPostInput: __type(name: "CreatePostInput") {
-        inputFields {
-          name
-          type {
-            name
-            kind
-            ofType { name kind }
+  const results = await Promise.all(
+    selectedChannels.map(async ({ platform, id }) => {
+      try {
+        const mutation = `
+          mutation CreatePost($input: CreatePostInput!) {
+            createPost(input: $input) {
+              ... on PostActionSuccess {
+                post {
+                  id
+                  status
+                  dueAt
+                }
+              }
+            }
           }
+        `;
+
+        const variables = {
+          input: {
+            channelId: id,
+            schedulingType: 'notification', // enum: 'notification' | 'automatic'
+            dueAt: scheduledAt,
+            text: caption,
+            assets: imageUrls.map(url => ({ url, type: 'IMAGE' })),
+          }
+        };
+
+        const r = await fetch('https://api.buffer.com/graphql', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${BUFFER_API_KEY}`,
+          },
+          body: JSON.stringify({ query: mutation, variables }),
+        });
+
+        const data = await r.json();
+        console.log(`Buffer ${platform} response:`, JSON.stringify(data).slice(0, 400));
+
+        if (data.errors) {
+          return { platform, success: false, error: data.errors[0]?.message };
         }
+
+        return { platform, success: true, postId: data.data?.createPost?.post?.id };
+
+      } catch (err) {
+        console.error(`Buffer ${platform} error:`, err.message);
+        return { platform, success: false, error: err.message };
       }
-    }
-  `;
+    })
+  );
 
-  const introRes = await fetch('https://api.buffer.com/graphql', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${BUFFER_API_KEY}`,
-    },
-    body: JSON.stringify({ query: introspectQuery }),
-  });
+  const succeeded = results.filter(r => r.success);
+  const failed = results.filter(r => !r.success);
 
-  const introData = await introRes.json();
-  const schedulingEnums = introData?.data?.schedulingType?.enumValues?.map(e => e.name) || [];
-  const inputFields = introData?.data?.createPostInput?.inputFields?.map(f => f.name) || [];
+  console.log('Final results:', JSON.stringify(results));
 
-  console.log('SchedulingType enum values:', schedulingEnums);
-  console.log('CreatePostInput fields:', inputFields);
-
-  // Return this info so we can see it in the response too
-  return res.status(200).json({
-    success: false,
-    debug: true,
-    schedulingEnums,
-    inputFields,
-    message: 'Debug info — check schedulingEnums and inputFields to fix the mutation',
-  });
+  if (succeeded.length > 0) {
+    return res.status(200).json({
+      success: true,
+      message: `Scheduled to ${succeeded.map(r => r.platform).join(', ')} successfully.`,
+      results,
+      scheduledAt,
+      failed: failed.length ? failed : undefined,
+    });
+  } else {
+    return res.status(500).json({
+      error: 'Failed to schedule to any platform',
+      results,
+    });
+  }
 };
