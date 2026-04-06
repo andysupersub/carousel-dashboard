@@ -51,7 +51,7 @@ module.exports = async function handler(req, res) {
         const variables = {
           input: {
             channelId: id,
-            schedulingType: 'scheduled',
+            schedulingType: 'SCHEDULED',
             dueAt: scheduledAt,
             text: caption,
             media: imageUrls.map(url => ({ url, type: 'IMAGE' })),
