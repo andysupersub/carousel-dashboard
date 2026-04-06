@@ -1,5 +1,4 @@
-// api/schedule.js — Vercel Serverless Function (CommonJS)
-// Calls all platforms in parallel — fast, no timeout
+// api/schedule.js — Buffer GraphQL API direct (no Claude, no MCP)
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -15,8 +14,7 @@ module.exports = async function handler(req, res) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
 
-  const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
-  const BUFFER_API_KEY    = process.env.BUFFER_API_KEY;
+  const BUFFER_API_KEY = process.env.BUFFER_API_KEY;
 
   const CHANNEL_IDS = {
     instagram: process.env.BUFFER_INSTAGRAM_ID,
@@ -24,91 +22,86 @@ module.exports = async function handler(req, res) {
     tiktok:    process.env.BUFFER_TIKTOK_ID,
   };
 
-  const selectedChannelIds = platforms.map(p => CHANNEL_IDS[p]).filter(Boolean);
+  const selectedChannels = platforms
+    .map(p => ({ platform: p, id: CHANNEL_IDS[p] }))
+    .filter(c => c.id);
 
-  if (!selectedChannelIds.length) {
-    return res.status(400).json({ error: 'No valid channel IDs found for selected platforms' });
+  if (!selectedChannels.length) {
+    return res.status(400).json({ error: 'No valid channel IDs found' });
   }
 
-  // Build one prompt that schedules ALL channels in a single Claude call
-  const prompt = `
-Schedule this social media carousel post to Buffer for ALL of these channel IDs at once.
-
-Channel IDs to schedule to (schedule ALL of them):
-${selectedChannelIds.map((id, i) => `${i+1}. ${id}`).join('\n')}
-
-Post details:
-- Text: ${caption}
-- Images (use all of these in order as the media): ${imageUrls.join(', ')}
-- Scheduled time (UTC): ${scheduledAt}
-
-Important: Call create_post once for EACH channel ID listed above. Do not skip any.
-Schedule all ${selectedChannelIds.length} channels before responding.
-  `.trim();
-
-  try {
-    console.log('Scheduling to', selectedChannelIds.length, 'channels:', selectedChannelIds);
-
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 9000); // abort at 9s to respond before Vercel 10s limit
-
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01',
-        'anthropic-beta': 'mcp-client-2025-04-04',
-      },
-      body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001', // Use Haiku — much faster than Sonnet
-        max_tokens: 2048,
-        mcp_servers: [
-          {
-            type: 'url',
-            url: 'https://mcp.buffer.com/mcp',
-            name: 'buffer',
-            authorization_token: BUFFER_API_KEY,
+  // Schedule to all channels in parallel
+  const results = await Promise.all(
+    selectedChannels.map(async ({ platform, id }) => {
+      try {
+        const mutation = `
+          mutation CreatePost($input: PostInput!) {
+            createPost(input: $input) {
+              post {
+                id
+                status
+                dueAt
+              }
+            }
           }
-        ],
-        messages: [{ role: 'user', content: prompt }],
-      }),
-      signal: controller.signal,
-    });
+        `;
 
-    clearTimeout(timeout);
+        const variables = {
+          input: {
+            profileId: id,
+            content: {
+              text: caption,
+              media: imageUrls.map(url => ({
+                url,
+                type: 'IMAGE',
+              })),
+            },
+            dueAt: scheduledAt,
+          }
+        };
 
-    const data = await response.json();
-    console.log('Claude response status:', response.status);
+        const r = await fetch('https://api.buffer.com/graphql', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${BUFFER_API_KEY}`,
+          },
+          body: JSON.stringify({ query: mutation, variables }),
+        });
 
-    if (!response.ok) {
-      return res.status(500).json({ error: 'Claude API error', detail: data });
-    }
+        const data = await r.json();
+        console.log(`Buffer ${platform} response:`, JSON.stringify(data).slice(0, 300));
 
-    const text = data.content?.filter(b => b.type === 'text').map(b => b.text).join('\n') || '';
-    console.log('Schedule result:', text.slice(0, 400));
+        if (data.errors) {
+          return { platform, success: false, error: data.errors[0]?.message || 'Unknown error' };
+        }
 
+        return { platform, success: true, postId: data.data?.createPost?.post?.id };
+
+      } catch (err) {
+        console.error(`Buffer ${platform} error:`, err.message);
+        return { platform, success: false, error: err.message };
+      }
+    })
+  );
+
+  const succeeded = results.filter(r => r.success);
+  const failed = results.filter(r => !r.success);
+
+  console.log('Schedule results:', JSON.stringify(results));
+
+  if (succeeded.length > 0) {
     return res.status(200).json({
       success: true,
-      message: `Scheduled to ${platforms.join(', ')} for ${scheduledAt}.`,
-      detail: text,
-      platforms,
+      message: `Scheduled to ${succeeded.map(r => r.platform).join(', ')} successfully.`,
+      results,
       scheduledAt,
+      failed: failed.length ? failed : undefined,
     });
-
-  } catch (err) {
-    if (err.name === 'AbortError') {
-      // Timed out — but it might have partially worked
-      console.log('Request timed out — may have partially scheduled');
-      return res.status(200).json({
-        success: true,
-        message: 'Scheduling in progress. Check Buffer in 30 seconds to confirm all platforms.',
-        warning: 'Request took longer than expected.',
-        platforms,
-        scheduledAt,
-      });
-    }
-    console.error('Schedule error:', err.message);
-    return res.status(500).json({ error: 'Failed to schedule', detail: err.message });
+  } else {
+    return res.status(500).json({
+      error: 'Failed to schedule to any platform',
+      results,
+    });
   }
 };
