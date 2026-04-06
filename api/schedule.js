@@ -1,7 +1,6 @@
 // api/schedule.js — Vercel Serverless Function (CommonJS)
 
 module.exports = async function handler(req, res) {
-  // CORS preflight
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -30,63 +29,55 @@ module.exports = async function handler(req, res) {
     return res.status(400).json({ error: 'No valid channel IDs found for selected platforms' });
   }
 
-  const prompt = `
-You are a social media scheduling assistant for SuperSub New Zealand.
+  // Schedule to each platform separately via Buffer API directly
+  // This is faster than going through Claude MCP
+  const results = [];
+  const errors = [];
 
-Please schedule the following carousel post to Buffer using the create_post tool.
+  for (const channelId of selectedChannelIds) {
+    try {
+      // Use Buffer API directly — much faster than MCP via Claude
+      const bufferRes = await fetch('https://api.bufferapp.com/1/updates/create.json', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          access_token: BUFFER_API_KEY,
+          profile_ids: channelId,
+          text: caption,
+          scheduled_at: scheduledAt,
+          media: JSON.stringify({ photo: imageUrls[0] }),
+        }),
+      });
 
-Post details:
-- Title: ${title}
-- Caption: ${caption}
-- Image URLs (in order): ${imageUrls.join(', ')}
-- Channel IDs to post to: ${selectedChannelIds.join(', ')}
-- Scheduled time (UTC): ${scheduledAt}
+      const bufferData = await bufferRes.json();
+      console.log('Buffer response for channel', channelId, ':', JSON.stringify(bufferData).slice(0, 200));
 
-Use the Buffer MCP create_post tool to schedule this post to each of the channel IDs provided.
-Schedule each channel separately with the same content and scheduled time.
-Confirm when all posts have been scheduled successfully.
-  `.trim();
-
-  try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01',
-        'anthropic-beta': 'mcp-client-2025-04-04',
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1024,
-        mcp_servers: [
-          {
-            type: 'url',
-            url: 'https://mcp.buffer.com/mcp',
-            name: 'buffer',
-            authorization_token: BUFFER_API_KEY,
-          }
-        ],
-        messages: [{ role: 'user', content: prompt }],
-      }),
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      console.error('Claude API error:', JSON.stringify(data));
-      return res.status(500).json({ error: 'Claude API error', detail: data });
+      if (bufferRes.ok) {
+        results.push({ channelId, success: true });
+      } else {
+        errors.push({ channelId, error: bufferData });
+      }
+    } catch (err) {
+      console.error('Buffer error for channel', channelId, err.message);
+      errors.push({ channelId, error: err.message });
     }
+  }
 
-    const text = data.content
-      .filter(b => b.type === 'text')
-      .map(b => b.text)
-      .join('\n');
-
-    return res.status(200).json({ success: true, message: text, platforms, scheduledAt });
-
-  } catch (err) {
-    console.error('Schedule error:', err.message);
-    return res.status(500).json({ error: 'Failed to schedule post', detail: err.message });
+  if (results.length > 0) {
+    return res.status(200).json({
+      success: true,
+      message: `Scheduled to ${results.length} platform(s) successfully.`,
+      results,
+      errors: errors.length ? errors : undefined,
+      platforms,
+      scheduledAt,
+    });
+  } else {
+    return res.status(500).json({
+      error: 'Failed to schedule to any platform',
+      errors,
+    });
   }
 };
