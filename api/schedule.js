@@ -1,4 +1,4 @@
-// api/schedule.js — Buffer GraphQL API (final clean version)
+// api/schedule.js — Buffer GraphQL API with full response logging
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -30,11 +30,32 @@ module.exports = async function handler(req, res) {
     return res.status(400).json({ error: 'No valid channel IDs found' });
   }
 
+  // First — get the full PostActionSuccess type to see all returned fields
+  const introRes = await fetch('https://api.buffer.com/graphql', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${BUFFER_API_KEY}` },
+    body: JSON.stringify({ query: `
+      query {
+        postActionSuccess: __type(name: "PostActionSuccess") {
+          fields { name type { name kind ofType { name } } }
+        }
+      }
+    `}),
+  });
+  const introData = await introRes.json();
+  const successFields = introData?.data?.postActionSuccess?.fields?.map(f => f.name) || [];
+  console.log('PostActionSuccess fields:', successFields);
+
   const mutation = `
     mutation CreatePost($input: CreatePostInput!) {
       createPost(input: $input) {
         ... on PostActionSuccess {
-          post { id status dueAt }
+          post {
+            id
+            status
+            dueAt
+            serviceUpdateId
+          }
         }
       }
     }
@@ -66,14 +87,29 @@ module.exports = async function handler(req, res) {
         });
 
         const data = await r.json();
+        // Log FULL response for debugging
+        console.log(`Buffer ${platform} FULL response:`, JSON.stringify(data));
 
         if (data.errors) {
-          console.error(`Buffer ${platform} error:`, data.errors[0]?.message);
           return { platform, success: false, error: data.errors[0]?.message };
         }
 
-        console.log(`Buffer ${platform}: scheduled successfully`);
-        return { platform, success: true };
+        const post = data.data?.createPost?.post;
+        console.log(`Buffer ${platform} post:`, JSON.stringify(post));
+
+        // If post is null/empty, it might be a different return type
+        if (!post) {
+          console.log(`Buffer ${platform}: createPost returned empty — checking raw data:`, JSON.stringify(data.data));
+        }
+
+        return {
+          platform,
+          success: true,
+          postId: post?.id,
+          status: post?.status,
+          dueAt: post?.dueAt,
+          rawData: data.data,
+        };
 
       } catch (err) {
         console.error(`Buffer ${platform} exception:`, err.message);
@@ -81,6 +117,8 @@ module.exports = async function handler(req, res) {
       }
     })
   );
+
+  console.log('Final results:', JSON.stringify(results));
 
   const succeeded = results.filter(r => r.success);
   const failed = results.filter(r => !r.success);
