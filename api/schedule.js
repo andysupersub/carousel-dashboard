@@ -1,4 +1,4 @@
-// api/schedule.js — Buffer GraphQL API (FINAL)
+// api/schedule.js — Buffer GraphQL API (Carousels + Videos)
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -7,9 +7,18 @@ module.exports = async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const { caption, imageUrls, platforms, scheduledAt } = req.body;
-  if (!caption || !imageUrls?.length || !platforms?.length || !scheduledAt) {
+  const { caption, imageUrls, videoUrl, platforms, scheduledAt, type } = req.body;
+
+  if (!caption || !platforms?.length || !scheduledAt) {
     return res.status(400).json({ error: 'Missing required fields' });
+  }
+
+  // Videos require either a videoUrl or a thumbnail; carousels require imageUrls
+  if (type === 'video' && !videoUrl && !imageUrls?.length) {
+    return res.status(400).json({ error: 'Video post requires videoUrl or imageUrls (thumbnail)' });
+  }
+  if (type !== 'video' && !imageUrls?.length) {
+    return res.status(400).json({ error: 'Carousel post requires imageUrls' });
   }
 
   const BUFFER_API_KEY = process.env.BUFFER_API_KEY;
@@ -46,21 +55,19 @@ module.exports = async function handler(req, res) {
   const results = await Promise.all(
     selectedChannels.map(async ({ platform, id }) => {
       try {
-        // Platform-specific metadata with correct enum values
         let metadata = {};
         if (platform === 'instagram') {
-          metadata = {
-            instagram: {
-              type: 'post',
-              shouldShareToFeed: true,
-            }
-          };
+          metadata = { instagram: { type: 'post', shouldShareToFeed: true } };
         } else if (platform === 'facebook') {
-          metadata = {
-            facebook: {
-              type: 'post',
-            }
-          };
+          metadata = { facebook: { type: 'post' } };
+        }
+
+        // Build assets — video post uses video asset if available, otherwise falls back to images
+        let assets = {};
+        if (type === 'video' && videoUrl) {
+          assets = { video: { url: videoUrl } };
+        } else if (imageUrls?.length) {
+          assets = { images: imageUrls.map(url => ({ url })) };
         }
 
         const variables = {
@@ -70,7 +77,7 @@ module.exports = async function handler(req, res) {
             dueAt: scheduledAt,
             text: caption,
             mode: 'customScheduled',
-            assets: { images: imageUrls.map(url => ({ url })) },
+            assets,
             ...(Object.keys(metadata).length ? { metadata } : {}),
           }
         };
