@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SIP Panel — Content Framework | SuperSub Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy:#011648; --blue:#276ce9; --mist:#f0f4fd;
+  --white:#ffffff; --gray:#f2f3f5;
+  --border:rgba(1,22,72,0.1); --text:#011648; --muted:#7a8aaa;
+
+  /* Pillar colours */
+  --p1:#1565c0; --p1l:#e3f2fd;
+  --p2:#d84315; --p2l:#fbe9e7;
+  --p3:#2e7d32; --p3l:#e8f5e9;
+  --p4:#6a1b9a; --p4l:#f3e5f5;
+  --p5:#e65100; --p5l:#fff3e0;
+
+  /* Category colours */
+  --c1:#00695c; --c1l:#e0f2f1;
+  --c2:#1565c0; --c2l:#e3f2fd;
+  --c3:#b71c1c; --c3l:#ffebee;
+  --c4:#e65100; --c4l:#fff3e0;
+  --c5:#4a148c; --c5l:#f3e5f5;
+  --c6:#1b5e20; --c6l:#e8f5e9;
+  --c7:#37474f; --c7l:#eceff1;
+  --c8:#880e4f; --c8l:#fce4ec;
+  --c9:#e65100; --c9l:#fff8e1;
+  --c10:#004d40; --c10l:#e0f2f1;
+  --c11:#311b92; --c11l:#ede7f6;
+  --c12:#2e7d32; --c12l:#f1f8e9;
+}
+
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Inter',sans-serif;background:var(--gray);color:var(--text);min-height:100vh;display:flex;flex-direction:column;}
+.app-shell{display:flex;flex:1;min-height:0;}
+
+/* SIDEBAR */
+.sidebar{width:220px;min-width:220px;background:var(--navy);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;}
+.sidebar-logo{padding:20px 20px 12px;font-size:18px;font-weight:500;letter-spacing:-0.05em;color:#fff;border-bottom:1px solid rgba(255,255,255,0.08);margin-bottom:8px;}
+.sidebar-logo span{color:var(--blue);}
+.sidebar-section{padding:8px 12px 4px;font-size:10px;font-weight:600;letter-spacing:0.08em;color:rgba(255,255,255,0.35);text-transform:uppercase;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 16px;margin:1px 8px;border-radius:7px;cursor:pointer;font-size:13px;font-weight:200;color:rgba(255,255,255,0.65);transition:all 0.15s;letter-spacing:-0.01em;text-decoration:none;}
+.nav-item:hover{background:rgba(255,255,255,0.07);color:#fff;}
+.nav-item.active{background:rgba(39,108,233,0.2);color:#fff;font-weight:500;}
+.nav-icon{font-size:14px;width:18px;text-align:center;}
+.nav-divider{border:none;border-top:1px solid rgba(255,255,255,0.08);margin:10px 16px;}
+.sidebar-stats{padding:16px;margin-top:auto;border-top:1px solid rgba(255,255,255,0.08);}
+.sidebar-stat{display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:11px;font-weight:200;color:rgba(255,255,255,0.45);}
+.sidebar-stat b{color:rgba(255,255,255,0.7);font-weight:500;}
+
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden;}
+.topbar{background:var(--white);border-bottom:1px solid var(--border);padding:0 28px;height:56px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;position:sticky;top:0;z-index:100;}
+.topbar-left{display:flex;align-items:center;gap:12px;}
+.topbar-title{font-size:15px;font-weight:500;letter-spacing:-0.03em;color:var(--navy);}
+.ratio-badge{font-size:10px;font-weight:500;padding:3px 8px;border-radius:20px;background:var(--mist);color:var(--blue);border:1px solid rgba(39,108,233,0.2);}
+.channel-label{font-size:11px;font-weight:200;color:var(--muted);}
+.stats-bar{background:var(--white);border-bottom:1px solid var(--border);padding:16px 28px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.stats-bar-left h1{font-size:20px;font-weight:500;letter-spacing:-0.05em;color:var(--navy);margin-bottom:2px;}
+.stats-bar-left p{font-size:12px;font-weight:200;color:var(--muted);}
+.stats{display:flex;gap:24px;}
+.stat{text-align:right;}
+.stat-n{font-size:26px;font-weight:500;letter-spacing:-0.05em;color:var(--navy);line-height:1;}
+.stat-l{font-size:10px;font-weight:200;color:var(--muted);margin-top:2px;text-transform:uppercase;letter-spacing:0.04em;}
+.content-area{padding:24px 28px 48px;overflow-y:auto;flex:1;}
+
+/* TABS */
+.fw-tabs{display:flex;gap:4px;border-bottom:2px solid rgba(1,22,72,0.1);margin-bottom:24px;}
+.fw-tab{padding:10px 20px;font-family:'Inter',sans-serif;font-size:12px;font-weight:500;letter-spacing:-0.02em;cursor:pointer;background:transparent;border:none;color:rgba(1,22,72,0.4);border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .2s;border-radius:4px 4px 0 0;}
+.fw-tab:hover{color:var(--navy);background:rgba(1,22,72,0.03);}
+.fw-tab.active{color:var(--blue);border-bottom-color:var(--blue);}
+.fw-panel{display:none;}.fw-panel.active{display:block;}
+
+/* MIX BAR */
+.mix-section{background:var(--navy);border-radius:10px;padding:20px 24px;margin-bottom:24px;}
+.mix-title{font-size:11px;font-weight:500;color:rgba(255,255,255,0.45);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:12px;}
+.mix-bar{display:flex;border-radius:6px;overflow:hidden;height:32px;margin-bottom:10px;}
+.mix-seg{display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.mix-pct{font-size:11px;font-weight:500;color:#fff;}
+.mix-name{font-size:8px;font-weight:500;color:rgba(255,255,255,0.7);text-transform:uppercase;letter-spacing:0.4px;}
+
+/* CATEGORIES */
+.cat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+.cat-card{background:var(--white);border-radius:10px;overflow:hidden;border:1px solid var(--border);box-shadow:0 2px 8px rgba(1,22,72,0.05);}
+.cat-hdr{padding:11px 15px;display:flex;align-items:center;gap:8px;}
+.cat-icon{font-size:13px;}
+.cat-name{font-size:11px;font-weight:500;color:#fff;flex:1;letter-spacing:-0.01em;}
+.cat-count{font-size:9px;background:rgba(255,255,255,0.2);color:#fff;padding:2px 6px;border-radius:20px;font-weight:500;}
+.cat-body{padding:10px 13px 12px;}
+.sub-lbl{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:#aaa;margin:7px 0 4px;}
+.sub-lbl:first-child{margin-top:0;}
+.tags{display:flex;flex-wrap:wrap;gap:3px;}
+.tag{font-size:9px;padding:2px 7px;border-radius:4px;font-weight:500;}
+
+/* PILLARS */
+.p-nav{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;}
+.p-tab{padding:7px 14px;border-radius:6px;font-size:11px;font-weight:500;cursor:pointer;border:2px solid transparent;font-family:'Inter',sans-serif;transition:all .15s;}
+.p-tab.active{color:#fff!important;}
+.pillar-card{background:var(--white);border-radius:10px;padding:22px;border:1px solid var(--border);box-shadow:0 2px 8px rgba(1,22,72,0.05);display:none;}
+.pillar-card.active{display:block;}
+.pc-top{display:flex;gap:14px;align-items:flex-start;margin-bottom:18px;}
+.pc-badge{padding:5px 14px;border-radius:6px;font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:0.06em;color:#fff;white-space:nowrap;}
+.pc-name{font-size:18px;font-weight:500;letter-spacing:-0.04em;color:var(--navy);margin-bottom:3px;}
+.pc-tag{font-size:12px;font-weight:200;color:#666;line-height:1.5;font-style:italic;}
+.obj-box{border-radius:7px;padding:12px 16px;margin-bottom:18px;border-left:4px solid;}
+.obj-label{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:5px;}
+.obj-text{font-size:12px;font-weight:200;color:#333;line-height:1.6;}
+.pc-two{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px;}
+.pc-slbl{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:#aaa;margin-bottom:7px;}
+.stags{display:flex;flex-wrap:wrap;gap:4px;}
+.stag{font-size:10px;padding:3px 8px;border-radius:4px;font-weight:500;}
+.tone-tag{font-size:10px;padding:3px 8px;border-radius:4px;font-weight:200;background:var(--mist);color:var(--navy);}
+.ideas-list{display:flex;flex-direction:column;gap:4px;margin-bottom:18px;}
+.idea-li{font-size:12px;font-weight:200;color:#333;padding:8px 12px;background:var(--mist);border-radius:5px;line-height:1.4;}
+.idea-li::before{content:"→ ";color:#aaa;}
+.ratio-row{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--mist);border-radius:7px;}
+.ratio-lbl{font-size:11px;font-weight:500;min-width:100px;color:#555;}
+.ratio-wrap{flex:1;height:7px;background:#ddd;border-radius:4px;overflow:hidden;}
+.ratio-fill{height:100%;border-radius:4px;}
+.ratio-pct{font-size:14px;font-weight:500;min-width:36px;text-align:right;letter-spacing:-0.03em;}
+
+/* MAPPING */
+.map-col{display:flex;flex-direction:column;gap:8px;}
+.map-row{background:var(--white);border-radius:8px;padding:14px 18px;border:1px solid var(--border);}
+.map-pname{font-size:13px;font-weight:500;letter-spacing:-0.02em;margin-bottom:8px;}
+.map-cats{display:flex;flex-wrap:wrap;gap:5px;}
+.map-cat{font-size:10px;padding:3px 9px;border-radius:4px;font-weight:500;}
+
+/* IDEAS BANK */
+.filter-row{display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap;align-items:center;}
+.flbl{font-size:11px;font-weight:500;color:#666;}
+.fbtn{padding:5px 13px;border-radius:20px;font-size:10px;font-weight:500;cursor:pointer;border:1.5px solid var(--border);background:var(--white);color:var(--navy);font-family:'Inter',sans-serif;transition:all .15s;}
+.fbtn:hover{background:var(--mist);}
+.fbtn.active{background:var(--navy);color:#fff;border-color:var(--navy);}
+.search-input{padding:7px 15px;border-radius:20px;border:1.5px solid var(--border);font-family:'Inter',sans-serif;font-size:12px;font-weight:200;outline:none;width:200px;color:var(--navy);background:var(--white);}
+.search-input:focus{border-color:var(--blue);}
+.ideas-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.idea-card{background:var(--white);border-radius:7px;padding:12px 14px;border:1px solid var(--border);transition:transform .15s,box-shadow .15s;}
+.idea-card:hover{transform:translateY(-2px);box-shadow:0 4px 14px rgba(1,22,72,0.09);}
+.ic-pillar{font-size:8px;font-weight:500;text-transform:uppercase;letter-spacing:0.06em;padding:2px 7px;border-radius:3px;display:inline-block;margin-bottom:7px;color:#fff;}
+.ic-cat{font-size:9px;font-weight:200;color:#aaa;margin-bottom:5px;}
+.ic-text{font-size:11px;font-weight:200;color:#333;line-height:1.5;}
+.sh{display:flex;align-items:baseline;gap:10px;margin-bottom:18px;}
+.sh-title{font-size:17px;font-weight:500;letter-spacing:-0.04em;color:var(--navy);}
+.sh-count{font-size:12px;font-weight:200;color:#aaa;}
+
+footer{text-align:center;padding:20px;font-size:11px;font-weight:200;color:var(--muted);border-top:1px solid var(--border);background:var(--white);}
+
+@media(max-width:1024px){.sidebar{width:180px;min-width:180px;}.cat-grid{grid-template-columns:repeat(2,1fr);}.ideas-grid{grid-template-columns:repeat(2,1fr);}.pc-two{grid-template-columns:1fr;}}
+@media(max-width:700px){.sidebar{display:none;}.content-area{padding:16px;}.cat-grid,.ideas-grid{grid-template-columns:1fr;}.mix-bar .mix-name{display:none;}}
+</style>
+</head>
+<body>
+<div class="app-shell">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-logo">Super<span>Sub</span></div>
+    <div style="height:8px;"></div>
+    <div class="sidebar-section">Content</div>
+    <a href="index.html" class="nav-item"><span class="nav-icon">&#9783;</span> Carousels</a>
+    <a href="index.html" class="nav-item"><span class="nav-icon">&#9654;</span> Videos</a>
+    <hr class="nav-divider">
+    <div class="sidebar-section">Publish</div>
+    <a href="index.html" class="nav-item"><span class="nav-icon">&#128197;</span> Schedule</a>
+    <a href="index.html" class="nav-item"><span class="nav-icon">&#128202;</span> Analytics</a>
+    <hr class="nav-divider">
+    <div class="sidebar-section">Strategy</div>
+    <a href="snaplock-wall-framework.html" class="nav-item"><span class="nav-icon">&#129521;</span> Snaplock Wall</a>
+    <a href="sip-panel-framework.html" class="nav-item active"><span class="nav-icon">&#127959;</span> SIP Panel</a>
+    <div class="sidebar-stats">
+      <div class="sidebar-stat"><span>Categories</span><b>12</b></div>
+      <div class="sidebar-stat"><span>Pillars</span><b>5</b></div>
+      <div class="sidebar-stat"><span>Ideas</span><b>120+</b></div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title">SIP Panel</div>
+        <span class="ratio-badge">Content Framework</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span class="channel-label">supersub.nz &middot; Strategy</span>
+      </div>
+    </div>
+
+    <div class="stats-bar">
+      <div class="stats-bar-left">
+        <h1>SIP Panel — Content Framework</h1>
+        <p>12 categories, 5 pillars, 120+ topic ideas for residential &amp; light commercial audiences.</p>
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="stat-n">12</div><div class="stat-l">Categories</div></div>
+        <div class="stat"><div class="stat-n">5</div><div class="stat-l">Pillars</div></div>
+        <div class="stat"><div class="stat-n">120+</div><div class="stat-l">Ideas</div></div>
+      </div>
+    </div>
+
+    <div class="content-area">
+
+      <!-- MIX BAR -->
+      <div class="mix-section">
+        <div class="mix-title">Recommended Monthly Content Mix</div>
+        <div class="mix-bar">
+          <div class="mix-seg" style="flex:25;background:var(--p1)"><div class="mix-pct">25%</div><div class="mix-name">Educate</div></div>
+          <div class="mix-seg" style="flex:20;background:var(--p2)"><div class="mix-pct">20%</div><div class="mix-name">Problem</div></div>
+          <div class="mix-seg" style="flex:25;background:var(--p3)"><div class="mix-pct">25%</div><div class="mix-name">Solution</div></div>
+          <div class="mix-seg" style="flex:15;background:var(--p4)"><div class="mix-pct">15%</div><div class="mix-name">Trust</div></div>
+          <div class="mix-seg" style="flex:15;background:var(--p5)"><div class="mix-pct">15%</div><div class="mix-name">Convert</div></div>
+        </div>
+        <span style="font-size:10px;font-weight:200;color:rgba(255,255,255,0.4);">Audience: <em style="color:rgba(255,255,255,0.65)">Homeowners · Self-builders · Architects · Builders · Property Developers · NZ market</em></span>
+      </div>
+
+      <!-- TABS -->
+      <div class="fw-tabs">
+        <button class="fw-tab active" onclick="showTab('cats',this)">📋 12 Categories</button>
+        <button class="fw-tab" onclick="showTab('pillars',this)">🎯 5 Pillars</button>
+        <button class="fw-tab" onclick="showTab('mapping',this)">🗺️ Category → Pillar Map</button>
+        <button class="fw-tab" onclick="showTab('ideas',this)">💡 Content Ideas Bank</button>
+      </div>
+
+      <!-- CATEGORIES -->
+      <div class="fw-panel active" id="cats">
+        <div class="sh"><div class="sh-title">12 Content Categories</div><div class="sh-count">SIP Panel specific</div></div>
+        <div class="cat-grid">
+
+          <div class="cat-card"><div class="cat-hdr" style="background:#00695c"><span class="cat-icon">🏆</span><span class="cat-name">BENEFITS</span><span class="cat-count">12</span></div><div class="cat-body"><div class="sub-lbl">Performance</div><div class="tags"><span class="tag" style="background:#e0f2f1;color:#00695c">98% airtight from day one</span><span class="tag" style="background:#e0f2f1;color:#00695c">Warmer in winter</span><span class="tag" style="background:#e0f2f1;color:#00695c">Quieter interior</span><span class="tag" style="background:#e0f2f1;color:#00695c">Lower power bills</span></div><div class="sub-lbl">Build Speed</div><div class="tags"><span class="tag" style="background:#e0f2f1;color:#00695c">Weather-tight in days</span><span class="tag" style="background:#e0f2f1;color:#00695c">Fewer trades needed</span><span class="tag" style="background:#e0f2f1;color:#00695c">Pre-cut & pre-labelled</span></div><div class="sub-lbl">System</div><div class="tags"><span class="tag" style="background:#e0f2f1;color:#00695c">Structure + insulation + airtight in 1</span><span class="tag" style="background:#e0f2f1;color:#00695c">Predictable timeline</span><span class="tag" style="background:#e0f2f1;color:#00695c">Less waste on site</span></div></div></div>
+
+          <div class="cat-card"><div class="cat-hdr" style="background:#1565c0"><span class="cat-icon">⚙️</span><span class="cat-name">FEATURES</span><span class="cat-count">13</span></div><div class="cat-body"><div class="sub-lbl">Construction</div><div class="tags"><span class="tag" style="background:#e3f2fd;color:#1565c0">OSB or Triboard skins</span><span class="tag" style="background:#e3f2fd;color:#1565c0">S-grade PolyFR EPS core</span><span class="tag" style="background:#e3f2fd;color:#1565c0">Polyurethane adhesive bond</span><span class="tag" style="background:#e3f2fd;color:#1565c0">5 thickness options</span></div><div class="sub-lbl">Panel Types</div><div class="tags"><span class="tag" style="background:#e3f2fd;color:#1565c0">Wall panels</span><span class="tag" style="background:#e3f2fd;color:#1565c0">Floor panels</span><span class="tag" style="background:#e3f2fd;color:#1565c0">Roof panels</span><span class="tag" style="background:#e3f2fd;color:#1565c0">Lintel panels</span></div><div class="sub-lbl">Joining</div><div class="tags"><span class="tag" style="background:#e3f2fd;color:#1565c0">Spline joint (walls)</span><span class="tag" style="background:#e3f2fd;color:#1565c0">Lap joint (floors/roofs)</span><span class="tag" style="background:#e3f2fd;color:#1565c0">SIP tape for airtight seal</span></div></div></div>
+
+          <div class="cat-card"><div class="cat-hdr" style="background:#b71c1c"><span class="cat-icon">📐</span><span class="cat-name">TECHNICAL SPECS</span><span class="cat-count">14</span></div><div class="cat-body"><div class="sub-lbl">R-Values by Thickness</div><div class="tags"><span class="tag" style="background:#ffebee;color:#b71c1c">113mm = R2.8 (light fleece)</span><span class="tag" style="background:#ffebee;color:#b71c1c">163mm = R4.1</span><span class="tag" style="background:#ffebee;color:#b71c1c">213mm = R5.6</span><span class="tag" style="background:#ffebee;color:#b71c1c">263mm = R7.0</span><span class="tag" style="background:#ffebee;color:#b71c1c">313mm = R9.4 (heavy puffer)</span></div><div class="sub-lbl">Structural</div><div class="tags"><span class="tag" style="background:#ffebee;color:#b71c1c">Up to 10m height</span><span class="tag" style="background:#ffebee;color:#b71c1c">Up to 2 storeys</span><span class="tag" style="background:#ffebee;color:#b71c1c">Seismic zones 1-4</span><span class="tag" style="background:#ffebee;color:#b71c1c">Wind zones up to SED</span></div><div class="sub-lbl">Load</div><div class="tags"><span class="tag" style="background:#ffebee;color:#b71c1c">Floor: 1.5–3.0 kPa</span><span class="tag" style="background:#ffebee;color:#b71c1c">Walls: bracing capacity</span></div></div></div>
+
+          <div class="cat-card"><div class="cat-hdr" style="background:#e65100"><span class="cat-icon">🔧</span><span class="cat-name">INSTALLATION & PROCESS</span><span class="cat-count">12</span></div><div class="cat-body"><div class="sub-lbl">Build Sequence</div><div class="tags"><span class="tag" style="background:#fff3e0;color:#e65100">Base plates first</span><span class="tag" style="background:#fff3e0;color:#e65100">Exterior walls stood</span><span class="tag" style="background:#fff3e0;color:#e65100">Internal walls</span><span class="tag" style="background:#fff3e0;color:#e65100">Roof panels</span><span class="tag" style="background:#fff3e0;color:#e65100">SIP tape all joins</span></div><div class="sub-lbl">Key Requirements</div><div class="tags"><span class="tag" style="background:#fff3e0;color:#e65100">Level foundation critical</span><span class="tag" style="background:#fff3e0;color:#e65100">Airtight seal on interior face</span><span class="tag" style="background:#fff3e0;color:#e65100">No direct concrete contact</span><span class="tag" style="background:#fff3e0;color:#e65100">Photo record keeping</span></div><div class="sub-lbl">Electrical / Services</div><div class="tags"><span class="tag" style="background:#fff3e0;color:#e65100">Pre-routed wire chases</span><span class="tag" style="background:#fff3e0;color:#e65100">No plumbing inside panels</span></div></div></div>
+
+          <div class="cat-card"><div class="cat-hdr" style="background:#4a148c"><span class="cat-icon">🏠</span><span class="cat-name">APPLICATIONS</span><span class="cat-count">12</span></div><div class="cat-body"><div class="sub-lbl">Residential</div><div class="tags"><span class="tag" style="background:#f3e5f5;color:#4a148c">Family homes</span><span class="tag" style="background:#f3e5f5;color:#4a148c">First home (self-build)</span><span class="tag" style="background:#f3e5f5;color:#4a148c">Bach / holiday home</span><span class="tag" style="background:#f3e5f5;color:#4a148c">Granny flat / minor dwelling</span><span class="tag" style="background:#f3e5f5;color:#4a148c">Lifestyle block home</span></div><div class="sub-lbl">Light Commercial</div><div class="tags"><span class="tag" style="background:#f3e5f5;color:#4a148c">Light commercial structures</span><span class="tag" style="background:#f3e5f5;color:#4a148c">Rural / remote builds</span><span class="tag" style="background:#f3e5f5;color:#4a148c">Island / remote delivery</span></div><div class="sub-lbl">Development</div><div class="tags"><span class="tag" style="background:#f3e5f5;color:#4a148c">Multi-unit development</span><span class="tag" style="background:#f3e5f5;color:#4a148c">Investment rental property</span><span class="tag" style="background:#f3e5f5;color:#4a148c">Airbnb / short-stay</span></div></div></div>
+
+          <div class="cat-card"><div class="cat-hdr" style="background:#1b5e20"><span class="cat-icon">🎯</span><span class="cat-name">TARGET MARKET</span><span class="cat-count">10</span></div><div class="cat-body"><div class="sub-lbl">Homeowners</div><div class="tags"><span class="tag" style="background:#e8f5e9;color:#1b5e20">First-home buyers (land owners)</span><span class="tag" style="background:#e8f5e9;color:#1b5e20">Self-builders</span><span class="tag" style="background:#e8f5e9;color:#1b5e20">Lifestyle block owners</span><span class="tag" style="background:#e8f5e9;color:#1b5e20">Retirees downsizing</span></div><div class="sub-lbl">Industry</div><div class="tags"><span class="tag" style="background:#e8f5e9;color:#1b5e20">Builders & contractors</span><span class="tag" style="background:#e8f5e9;color:#1b5e20">Architects</span><span class="tag" style="background:#e8f5e9;color:#1b5e20">Property developers</span><span class="tag" style="background:#e8f5e9;color:#1b5e20">Property investors</span></div><div class="sub-lbl">Other</div><div class="tags"><span class="tag" style="background:#e8f5e9;color:#1b5e20">Rural / remote communities</span><span class="tag" style="background:#e8f5e9;color:#1b5e20">Pacific Island markets</span></div></div></div>
+
+          <div class="cat-card"><div class="cat-hdr" style="background:#37474f"><span class="cat-icon">⚖️</span><span class="cat-name">COMPARISON</span><span class="cat-count">10</span></div><div class="cat-body"><div class="sub-lbl">vs Timber Framing</div><div class="tags"><span class="tag" style="background:#eceff1;color:#37474f">Material cost vs system cost</span><span class="tag" style="background:#eceff1;color:#37474f">4 steps vs 1 step</span><span class="tag" style="background:#eceff1;color:#37474f">Labour hours comparison</span><span class="tag" style="background:#eceff1;color:#37474f">Energy performance comparison</span></div><div class="sub-lbl">Build Timeline</div><div class="tags"><span class="tag" style="background:#eceff1;color:#37474f">Traditional: 6-9 months</span><span class="tag" style="background:#eceff1;color:#37474f">SIP: 2-3 months</span><span class="tag" style="background:#eceff1;color:#37474f">Holding cost difference</span></div><div class="sub-lbl">Performance</div><div class="tags"><span class="tag" style="background:#eceff1;color:#37474f">R-value comparison</span><span class="tag" style="background:#eceff1;color:#37474f">Air leakage comparison</span><span class="tag" style="background:#eceff1;color:#37474f">Thermal bridge comparison</span></div></div></div>
+
+          <div class="cat-card"><div class="cat-hdr" style="background:#880e4f"><span class="cat-icon">🛡️</span><span class="cat-name">OBJECTION HANDLING</span><span class="cat-count">11</span></div><div class="cat-body"><div class="sub-lbl">Durability</div><div class="tags"><span class="tag" style="background:#fce4ec;color:#880e4f">"Does it last 50 years?"</span><span class="tag" style="background:#fce4ec;color:#880e4f">"What about moisture?"</span><span class="tag" style="background:#fce4ec;color:#880e4f">"Can it be repaired?"</span></div><div class="sub-lbl">Compliance</div><div class="tags"><span class="tag" style="background:#fce4ec;color:#880e4f">"Will council approve it?"</span><span class="tag" style="background:#fce4ec;color:#880e4f">"Is it NZ Building Code?"</span><span class="tag" style="background:#fce4ec;color:#880e4f">"What about fire rating?"</span></div><div class="sub-lbl">Practical</div><div class="tags"><span class="tag" style="background:#fce4ec;color:#880e4f">"Do I need a special builder?"</span><span class="tag" style="background:#fce4ec;color:#880e4f">"Is ventilation expensive?"</span><span class="tag" style="background:#fce4ec;color:#880e4f">"Can I run plumbing in walls?"</span><span class="tag" style="background:#fce4ec;color:#880e4f">"What about resale value?"</span></div></div></div>
+
+          <div class="cat-card"><div class="cat-hdr" style="background:#e65100"><span class="cat-icon">💰</span><span class="cat-name">FINANCIAL & ROI</span><span class="cat-count">11</span></div><div class="cat-body"><div class="sub-lbl">Homeowner</div><div class="tags"><span class="tag" style="background:#fff8e1;color:#e65100">Energy bill savings (20yr)</span><span class="tag" style="background:#fff8e1;color:#e65100">R-value vs power cost</span><span class="tag" style="background:#fff8e1;color:#e65100">Build cost vs buying existing</span></div><div class="sub-lbl">Developer</div><div class="tags"><span class="tag" style="background:#fff8e1;color:#e65100">Holding cost savings</span><span class="tag" style="background:#fff8e1;color:#e65100">Earlier rental income</span><span class="tag" style="background:#fff8e1;color:#e65100">Interest savings (3-4 months)</span><span class="tag" style="background:#fff8e1;color:#e65100">Earlier settlement</span></div><div class="sub-lbl">System Cost</div><div class="tags"><span class="tag" style="background:#fff8e1;color:#e65100">Labour cost reduction</span><span class="tag" style="background:#fff8e1;color:#e65100">Less trades = less invoices</span><span class="tag" style="background:#fff8e1;color:#e65100">KiwiSaver / First Home Grant</span></div></div></div>
+
+          <div class="cat-card"><div class="cat-hdr" style="background:#004d40"><span class="cat-icon">📋</span><span class="cat-name">COMPLIANCE & REGULATORY</span><span class="cat-count">10</span></div><div class="cat-body"><div class="sub-lbl">NZ Building Code</div><div class="tags"><span class="tag" style="background:#e0f2f1;color:#004d40">NZBC E2/AS1 compliant</span><span class="tag" style="background:#e0f2f1;color:#004d40">Pre-engineered to NZS 3604</span><span class="tag" style="background:#e0f2f1;color:#004d40">Pre-defined consent pathway</span><span class="tag" style="background:#e0f2f1;color:#004d40">PS1 / PS3 documentation</span></div><div class="sub-lbl">Site Parameters</div><div class="tags"><span class="tag" style="background:#e0f2f1;color:#004d40">Seismic zones 1-4</span><span class="tag" style="background:#e0f2f1;color:#004d40">Wind zones up to Very High</span><span class="tag" style="background:#e0f2f1;color:#004d40">Up to 10m height / 2 storeys</span></div><div class="sub-lbl">Fire</div><div class="tags"><span class="tag" style="background:#e0f2f1;color:#004d40">PolyFR fire retardant EPS</span><span class="tag" style="background:#e0f2f1;color:#004d40">No extra fire coatings needed</span><span class="tag" style="background:#e0f2f1;color:#004d40">Groups 1S / 3 ratings</span></div></div></div>
+
+          <div class="cat-card"><div class="cat-hdr" style="background:#311b92"><span class="cat-icon">💨</span><span class="cat-name">ENERGY & VENTILATION</span><span class="cat-count">9</span></div><div class="cat-body"><div class="sub-lbl">Airtightness</div><div class="tags"><span class="tag" style="background:#ede7f6;color:#311b92">Under 3 ACH typical</span><span class="tag" style="background:#ede7f6;color:#311b92">98% airtight from day one</span><span class="tag" style="background:#ede7f6;color:#311b92">No thermal bridges</span></div><div class="sub-lbl">Ventilation</div><div class="tags"><span class="tag" style="background:#ede7f6;color:#311b92">HRV / ERV mandatory</span><span class="tag" style="background:#ede7f6;color:#311b92">Warranty condition</span><span class="tag" style="background:#ede7f6;color:#311b92">Humidity: 40% winter / 60% summer</span><span class="tag" style="background:#ede7f6;color:#311b92">Heat recovery explained</span></div><div class="sub-lbl">Energy Performance</div><div class="tags"><span class="tag" style="background:#ede7f6;color:#311b92">R-value impact on bills</span><span class="tag" style="background:#ede7f6;color:#311b92">Passive House capable</span><span class="tag" style="background:#ede7f6;color:#311b92">H1 compliance + beyond</span></div></div></div>
+
+          <div class="cat-card"><div class="cat-hdr" style="background:#2e7d32"><span class="cat-icon">🌿</span><span class="cat-name">SUSTAINABILITY</span><span class="cat-count">8</span></div><div class="cat-body"><div class="sub-lbl">Materials</div><div class="tags"><span class="tag" style="background:#f1f8e9;color:#2e7d32">EPS core: 98% air by volume</span><span class="tag" style="background:#f1f8e9;color:#2e7d32">Triboard: 90% of each log used</span><span class="tag" style="background:#f1f8e9;color:#2e7d32">60% less site waste than timber</span></div><div class="sub-lbl">Carbon</div><div class="tags"><span class="tag" style="background:#f1f8e9;color:#2e7d32">Carbon payback in 3-4 years</span><span class="tag" style="background:#f1f8e9;color:#2e7d32">Up to 9.9x energy savings over 50yr</span><span class="tag" style="background:#f1f8e9;color:#2e7d32">NZ-made panels</span></div><div class="sub-lbl">Lifecycle</div><div class="tags"><span class="tag" style="background:#f1f8e9;color:#2e7d32">50-year structural lifespan</span><span class="tag" style="background:#f1f8e9;color:#2e7d32">Less heating = less emissions</span></div></div></div>
+
+        </div>
+      </div>
+
+      <!-- PILLARS -->
+      <div class="fw-panel" id="pillars">
+        <div class="sh"><div class="sh-title">5 Content Pillars</div><div class="sh-count">SIP Panel audience: homeowners, builders, architects, developers</div></div>
+        <div class="p-nav">
+          <button class="p-tab active" style="background:var(--p1l);color:var(--p1);border-color:var(--p1)" onclick="showPillar(1,this)">🎓 Pillar 1</button>
+          <button class="p-tab" style="background:var(--p2l);color:var(--p2);border-color:var(--p2)" onclick="showPillar(2,this)">😤 Pillar 2</button>
+          <button class="p-tab" style="background:var(--p3l);color:var(--p3);border-color:var(--p3)" onclick="showPillar(3,this)">✅ Pillar 3</button>
+          <button class="p-tab" style="background:var(--p4l);color:var(--p4);border-color:var(--p4)" onclick="showPillar(4,this)">🛡️ Pillar 4</button>
+          <button class="p-tab" style="background:var(--p5l);color:var(--p5);border-color:var(--p5)" onclick="showPillar(5,this)">🎯 Pillar 5</button>
+        </div>
+
+        <div class="pillar-card active" id="pc1">
+          <div class="pc-top"><div class="pc-badge" style="background:var(--p1)">Pillar 1</div><div><div class="pc-name">EDUCATE THE MARKET</div><div class="pc-tag">"People know SIP panels exist. They don't know why SuperSub's system is different and why that matters."</div></div></div>
+          <div class="obj-box" style="border-color:var(--p1);background:var(--p1l)"><div class="obj-label" style="color:var(--p1)">🎯 Business Objective</div><div class="obj-text">Build technical credibility and product understanding. Translate specs into relatable language. Teach the audience why SuperSub's specific system — pre-engineered to NZS 3604, S-grade PolyFR core — is different from other SIP systems.</div></div>
+          <div class="pc-two"><div><div class="pc-slbl">Categories</div><div class="stags"><span class="stag" style="background:var(--p1l);color:var(--p1)">Features</span><span class="stag" style="background:var(--p1l);color:var(--p1)">Technical Specs</span><span class="stag" style="background:var(--p1l);color:var(--p1)">Installation</span><span class="stag" style="background:var(--p1l);color:var(--p1)">Energy & Ventilation</span><span class="stag" style="background:var(--p1l);color:var(--p1)">Applications</span></div></div><div><div class="pc-slbl">Tone</div><div class="stags"><span class="tone-tag">Technical but accessible</span><span class="tone-tag">Balance for both audiences</span><span class="tone-tag">Confident expert</span></div></div></div>
+          <div class="pc-slbl">Best Content Ideas</div>
+          <div class="ideas-list">
+            <div class="idea-li">What's inside a SIP panel? The 3-layer reveal — OSB skins, PolyFR EPS core</div>
+            <div class="idea-li">R-value explained: R2.8 is a light fleece. R9.4 is a heavy puffer.</div>
+            <div class="idea-li">5 panel thicknesses — which one is right for your build?</div>
+            <div class="idea-li">Spline joint vs lap joint — when to use each and why it matters</div>
+            <div class="idea-li">What pre-engineered to NZS 3604 actually means for your consent</div>
+            <div class="idea-li">Why SIP panels need a ventilation system — the HRV/ERV explained</div>
+            <div class="idea-li">Floor panels, wall panels, roof panels — how a complete SIP system works</div>
+          </div>
+          <div class="ratio-row"><div class="ratio-lbl">Monthly mix</div><div class="ratio-wrap"><div class="ratio-fill" style="width:25%;background:var(--p1)"></div></div><div class="ratio-pct" style="color:var(--p1)">25%</div></div>
+        </div>
+
+        <div class="pillar-card" id="pc2">
+          <div class="pc-top"><div class="pc-badge" style="background:var(--p2)">Pillar 2</div><div><div class="pc-name">EXPOSE THE PROBLEM</div><div class="pc-tag">"Make them feel the real cost of building the traditional way before offering a better path."</div></div></div>
+          <div class="obj-box" style="border-color:var(--p2);background:var(--p2l)"><div class="obj-label" style="color:var(--p2)">🎯 Business Objective</div><div class="obj-text">Surface the pain of slow builds, high energy bills, tradie shortages, and consent delays. Help the viewer realise the system — not just the product — is the problem. Create the desire for a smarter alternative.</div></div>
+          <div class="pc-two"><div><div class="pc-slbl">Categories</div><div class="stags"><span class="stag" style="background:var(--p2l);color:var(--p2)">Comparison (problem)</span><span class="stag" style="background:var(--p2l);color:var(--p2)">Financial (hidden costs)</span><span class="stag" style="background:var(--p2l);color:var(--p2)">Target Market pain</span></div></div><div><div class="pc-slbl">Tone</div><div class="stags"><span class="tone-tag">Empathetic, relatable</span><span class="tone-tag">NZ-specific context</span><span class="tone-tag">Direct and honest</span></div></div></div>
+          <div class="pc-slbl">Best Content Ideas</div>
+          <div class="ideas-list">
+            <div class="idea-li">NZ has a tradie shortage — Construction trades are on the Government's Green List</div>
+            <div class="idea-li">The "delay tax" — every extra week on site costs developers thousands in interest</div>
+            <div class="idea-li">Why NZ homes are expensive to heat (thermal bridges in timber framing)</div>
+            <div class="idea-li">Traditional builds: frame → insulate → air-seal → line. Four separate steps, four sets of trades</div>
+            <div class="idea-li">The consent maze: why timber builds hit engineering queries that SIP systems avoid</div>
+            <div class="idea-li">NZ housing crisis: building smarter is the answer, not just building cheaper</div>
+          </div>
+          <div class="ratio-row"><div class="ratio-lbl">Monthly mix</div><div class="ratio-wrap"><div class="ratio-fill" style="width:20%;background:var(--p2)"></div></div><div class="ratio-pct" style="color:var(--p2)">20%</div></div>
+        </div>
+
+        <div class="pillar-card" id="pc3">
+          <div class="pc-top"><div class="pc-badge" style="background:var(--p3)">Pillar 3</div><div><div class="pc-name">PROVE THE SOLUTION</div><div class="pc-tag">"Show clearly why SuperSub's SIP system is the smarter answer — with specifics, not generalities."</div></div></div>
+          <div class="obj-box" style="border-color:var(--p3);background:var(--p3l)"><div class="obj-label" style="color:var(--p3)">🎯 Business Objective</div><div class="obj-text">Drive consideration and preference. Reframe the comparison from material cost to system cost. Show the full picture — consent speed, build timeline, energy performance, developer ROI. Make the decision feel obvious.</div></div>
+          <div class="pc-two"><div><div class="pc-slbl">Categories</div><div class="stags"><span class="stag" style="background:var(--p3l);color:var(--p3)">Benefits</span><span class="stag" style="background:var(--p3l);color:var(--p3)">Comparison (solution)</span><span class="stag" style="background:var(--p3l);color:var(--p3)">Financial & ROI</span><span class="stag" style="background:var(--p3l);color:var(--p3)">Applications</span><span class="stag" style="background:var(--p3l);color:var(--p3)">Sustainability</span></div></div><div><div class="pc-slbl">Tone</div><div class="stags"><span class="tone-tag">Confident</span><span class="tone-tag">Specific numbers</span><span class="tone-tag">System vs system</span></div></div></div>
+          <div class="pc-slbl">Best Content Ideas</div>
+          <div class="ideas-list">
+            <div class="idea-li">SIP vs timber: the wrong comparison is $/m². The right comparison is system vs system.</div>
+            <div class="idea-li">3 people. 3 days. Weather-tight home shell. Here's exactly how.</div>
+            <div class="idea-li">Developers: $500K loan at 7% = $2,500/week in interest. 12 weeks saved = real money.</div>
+            <div class="idea-li">The thicker the panel, the less your heating system works. Over 20 years, that compounds.</div>
+            <div class="idea-li">Our system is pre-engineered to NZS 3604 — faster consent, fewer engineering queries</div>
+            <div class="idea-li">SIP homes sell faster: warmer, cheaper to run, healthier. Features buyers ask about.</div>
+          </div>
+          <div class="ratio-row"><div class="ratio-lbl">Monthly mix</div><div class="ratio-wrap"><div class="ratio-fill" style="width:25%;background:var(--p3)"></div></div><div class="ratio-pct" style="color:var(--p3)">25%</div></div>
+        </div>
+
+        <div class="pillar-card" id="pc4">
+          <div class="pc-top"><div class="pc-badge" style="background:var(--p4)">Pillar 4</div><div><div class="pc-name">BUILD TRUST</div><div class="pc-tag">"NZ buyers are cautious. Kill doubt with honest answers about compliance, durability, and the warranty condition."</div></div></div>
+          <div class="obj-box" style="border-color:var(--p4);background:var(--p4l)"><div class="obj-label" style="color:var(--p4)">🎯 Business Objective</div><div class="obj-text">Remove the final hesitation before enquiry. The most important trust-builders for SIP: does it meet NZ Building Code, how long does it last, and what is the ventilation requirement. Be upfront about all of it.</div></div>
+          <div class="pc-two"><div><div class="pc-slbl">Categories</div><div class="stags"><span class="stag" style="background:var(--p4l);color:var(--p4)">Objection Handling</span><span class="stag" style="background:var(--p4l);color:var(--p4)">Compliance</span><span class="stag" style="background:var(--p4l);color:var(--p4)">Energy & Ventilation</span><span class="stag" style="background:var(--p4l);color:var(--p4)">Sustainability</span></div></div><div><div class="pc-slbl">Tone</div><div class="stags"><span class="tone-tag">Honest, no spin</span><span class="tone-tag">Technical credibility</span><span class="tone-tag">Balanced (both audiences)</span></div></div></div>
+          <div class="pc-slbl">Best Content Ideas</div>
+          <div class="ideas-list">
+            <div class="idea-li">Your SIP panel build has a 10-year warranty — but only if your builder does this one thing</div>
+            <div class="idea-li">Do SIP homes last as long as timber? The honest 50-year durability answer</div>
+            <div class="idea-li">Our panels pre-engineered to NZS 3604 — here's what that means for your consent</div>
+            <div class="idea-li">The ventilation requirement explained: why HRV/ERV is non-negotiable, not optional</div>
+            <div class="idea-li">"Will council approve a SIP home?" — the pre-approved compliance pathway</div>
+            <div class="idea-li">Seismic zones 1-4, wind zones up to Very High, buildings up to 10 metres — rated for almost everywhere in NZ</div>
+          </div>
+          <div class="ratio-row"><div class="ratio-lbl">Monthly mix</div><div class="ratio-wrap"><div class="ratio-fill" style="width:15%;background:var(--p4)"></div></div><div class="ratio-pct" style="color:var(--p4)">15%</div></div>
+        </div>
+
+        <div class="pillar-card" id="pc5">
+          <div class="pc-top"><div class="pc-badge" style="background:var(--p5)">Pillar 5</div><div><div class="pc-name">CONVERT TO ACTION</div><div class="pc-tag">"Speak directly to a specific person at a specific stage. Make the next step feel easy and worthwhile."</div></div></div>
+          <div class="obj-box" style="border-color:var(--p5);background:var(--p5l)"><div class="obj-label" style="color:var(--p5)">🎯 Business Objective</div><div class="obj-text">Generate enquiries and lead magnet downloads. Each piece of content targets a specific audience segment — first-home buyer with land, developer, builder, architect — with a specific, low-friction CTA.</div></div>
+          <div class="pc-two"><div><div class="pc-slbl">Categories</div><div class="stags"><span class="stag" style="background:var(--p5l);color:var(--p5)">Target Market (specific)</span><span class="stag" style="background:var(--p5l);color:var(--p5)">Financial ROI (bottom)</span><span class="stag" style="background:var(--p5l);color:var(--p5)">Applications (decision)</span></div></div><div><div class="pc-slbl">Tone</div><div class="stags"><span class="tone-tag">Direct & personal</span><span class="tone-tag">Specific audience call-out</span><span class="tone-tag">Low-friction CTA</span></div></div></div>
+          <div class="pc-slbl">Best Content Ideas</div>
+          <div class="ideas-list">
+            <div class="idea-li">Drop your location in the comments — we'll tell you which panel thickness suits your build</div>
+            <div class="idea-li">Developers: comment ROI and we'll share the full cashflow breakdown</div>
+            <div class="idea-li">Architects: DM us or head to supersub.co.nz to download our SIP Technical Document free</div>
+            <div class="idea-li">Planning to build in the next 12 months? Here's your smartest first step</div>
+            <div class="idea-li">If you have land in NZ, building with SIP could cost less than buying existing — here's the maths</div>
+            <div class="idea-li">Builders: our panels are pre-labelled and pre-cut. Your crew picks it up in a day.</div>
+          </div>
+          <div class="ratio-row"><div class="ratio-lbl">Monthly mix</div><div class="ratio-wrap"><div class="ratio-fill" style="width:15%;background:var(--p5)"></div></div><div class="ratio-pct" style="color:var(--p5)">15%</div></div>
+        </div>
+      </div>
+
+      <!-- MAPPING -->
+      <div class="fw-panel" id="mapping">
+        <div class="sh"><div class="sh-title">Category → Pillar Map</div><div class="sh-count">SIP Panel</div></div>
+        <div class="map-col">
+          <div class="map-row"><div class="map-pname" style="color:var(--p1)">🎓 Pillar 1 — EDUCATE (25%)</div><div class="map-cats"><span class="map-cat" style="background:#e3f2fd;color:#1565c0">⚙️ Features</span><span class="map-cat" style="background:#ffebee;color:#b71c1c">📐 Technical Specs</span><span class="map-cat" style="background:#fff3e0;color:#e65100">🔧 Installation</span><span class="map-cat" style="background:#ede7f6;color:#311b92">💨 Energy & Ventilation</span><span class="map-cat" style="background:#f3e5f5;color:#4a148c">🏠 Applications</span></div></div>
+          <div class="map-row"><div class="map-pname" style="color:var(--p2)">😤 Pillar 2 — PROBLEM (20%)</div><div class="map-cats"><span class="map-cat" style="background:#eceff1;color:#37474f">⚖️ Comparison (problem)</span><span class="map-cat" style="background:#fff8e1;color:#e65100">💰 Financial (hidden costs)</span><span class="map-cat" style="background:#e8f5e9;color:#1b5e20">🎯 Target Market pain</span></div></div>
+          <div class="map-row"><div class="map-pname" style="color:var(--p3)">✅ Pillar 3 — SOLUTION (25%)</div><div class="map-cats"><span class="map-cat" style="background:#e0f2f1;color:#00695c">🏆 Benefits</span><span class="map-cat" style="background:#eceff1;color:#37474f">⚖️ Comparison (solution)</span><span class="map-cat" style="background:#fff8e1;color:#e65100">💰 Financial & ROI</span><span class="map-cat" style="background:#f3e5f5;color:#4a148c">🏠 Applications (success)</span><span class="map-cat" style="background:#f1f8e9;color:#2e7d32">🌿 Sustainability</span></div></div>
+          <div class="map-row"><div class="map-pname" style="color:var(--p4)">🛡️ Pillar 4 — TRUST (15%)</div><div class="map-cats"><span class="map-cat" style="background:#fce4ec;color:#880e4f">🛡️ Objection Handling</span><span class="map-cat" style="background:#e0f2f1;color:#004d40">📋 Compliance</span><span class="map-cat" style="background:#ede7f6;color:#311b92">💨 Energy & Ventilation</span><span class="map-cat" style="background:#f1f8e9;color:#2e7d32">🌿 Sustainability</span></div></div>
+          <div class="map-row"><div class="map-pname" style="color:var(--p5)">🎯 Pillar 5 — CONVERT (15%)</div><div class="map-cats"><span class="map-cat" style="background:#e8f5e9;color:#1b5e20">🎯 Target Market (specific)</span><span class="map-cat" style="background:#fff8e1;color:#e65100">💰 Financial ROI (bottom)</span><span class="map-cat" style="background:#f3e5f5;color:#4a148c">🏠 Applications (decision stage)</span></div></div>
+        </div>
+      </div>
+
+      <!-- IDEAS BANK -->
+      <div class="fw-panel" id="ideas">
+        <div class="sh"><div class="sh-title">Content Ideas Bank</div><div class="sh-count" id="ideas-count">120+ ideas</div></div>
+        <div class="filter-row">
+          <span class="flbl">Filter:</span>
+          <button class="fbtn active" onclick="filterIdeas('all',this)">All</button>
+          <button class="fbtn" onclick="filterIdeas('p1',this)" style="border-color:var(--p1);color:var(--p1)">🎓 Educate</button>
+          <button class="fbtn" onclick="filterIdeas('p2',this)" style="border-color:var(--p2);color:var(--p2)">😤 Problem</button>
+          <button class="fbtn" onclick="filterIdeas('p3',this)" style="border-color:var(--p3);color:var(--p3)">✅ Solution</button>
+          <button class="fbtn" onclick="filterIdeas('p4',this)" style="border-color:var(--p4);color:var(--p4)">🛡️ Trust</button>
+          <button class="fbtn" onclick="filterIdeas('p5',this)" style="border-color:var(--p5);color:var(--p5)">🎯 Convert</button>
+          <input class="search-input" type="text" placeholder="Search ideas..." oninput="searchIdeas(this.value)"/>
+        </div>
+        <div class="ideas-grid" id="ideas-grid"></div>
+      </div>
+
+    </div>
+    <footer>SuperSub Limited &middot; supersub.co.nz &middot; Content Dashboard</footer>
+  </div>
+</div>
+
+<script>
+function showTab(id,btn){document.querySelectorAll('.fw-panel').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.fw-tab').forEach(b=>b.classList.remove('active'));document.getElementById(id).classList.add('active');btn.classList.add('active');}
+function showPillar(n,btn){document.querySelectorAll('.pillar-card').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.p-tab').forEach(b=>b.classList.remove('active'));document.getElementById('pc'+n).classList.add('active');btn.classList.add('active');}
+
+const ideas = [
+  {p:'p1',pn:'Educate',pc:'#1565c0',cat:'Features',t:"What's inside a SuperSub SIP panel? OSB skins, PolyFR EPS core, polyurethane bond — the 3-layer reveal"},
+  {p:'p1',pn:'Educate',pc:'#1565c0',cat:'Technical Specs',t:'R-value explained: R2.8 is a light fleece. R9.4 is a heavy puffer. Your panel choice is your home jacket.'},
+  {p:'p1',pn:'Educate',pc:'#1565c0',cat:'Technical Specs',t:'5 panel thicknesses from 113mm to 313mm — which one is right for your build and location?'},
+  {p:'p1',pn:'Educate',pc:'#1565c0',cat:'Features',t:'Spline joint vs lap joint — when to use each and what it means for your build timeline'},
+  {p:'p1',pn:'Educate',pc:'#1565c0',cat:'Compliance',t:'What pre-engineered to NZS 3604 actually means for your building consent process'},
+  {p:'p1',pn:'Educate',pc:'#1565c0',cat:'Energy',t:'Why SIP panels need a ventilation system — the HRV/ERV requirement explained simply'},
+  {p:'p1',pn:'Educate',pc:'#1565c0',cat:'Features',t:'Floor panels, wall panels, roof panels — how a complete SIP building envelope works'},
+  {p:'p1',pn:'Educate',pc:'#1565c0',cat:'Technical Specs',t:'S-grade PolyFR EPS: what fire-retardant actually means inside a SIP panel'},
+  {p:'p1',pn:'Educate',pc:'#1565c0',cat:'Installation',t:'The build sequence: base plates, walls, internal walls, roof panels — day by day'},
+  {p:'p1',pn:'Educate',pc:'#1565c0',cat:'Energy',t:'Airtightness explained: what under 3 air changes per hour actually feels like to live in'},
+  {p:'p1',pn:'Educate',pc:'#1565c0',cat:'Features',t:'Triboard vs OSB skins — what the difference means for your build and your consent'},
+  {p:'p1',pn:'Educate',pc:'#1565c0',cat:'Installation',t:'SIP tape: why the airtight seal must go on the interior face only, never the exterior'},
+  {p:'p1',pn:'Educate',pc:'#1565c0',cat:'Applications',t:'Where SIP panels work: family home, bach, granny flat, rural build, lifestyle block'},
+  {p:'p1',pn:'Educate',pc:'#1565c0',cat:'Installation',t:'Panel handling on site: how to protect edges, avoid moisture, sequence correctly'},
+  {p:'p1',pn:'Educate',pc:'#1565c0',cat:'Features',t:'Lintels in SIP construction: how low-load and high-load lintels work differently'},
+  {p:'p2',pn:'Problem',pc:'#d84315',cat:'Target Market',t:'NZ has a tradie shortage. Construction trades are on the Government Green List. Here is why that matters for your build.'},
+  {p:'p2',pn:'Problem',pc:'#d84315',cat:'Financial',t:'The delay tax: every extra week on a building site costs developers thousands in loan interest'},
+  {p:'p2',pn:'Problem',pc:'#d84315',cat:'Comparison',t:'Why NZ homes are expensive to heat — thermal bridges in timber framing explained'},
+  {p:'p2',pn:'Problem',pc:'#d84315',cat:'Comparison',t:'Traditional builds: frame separately, insulate separately, air-seal separately. Four steps. Four trades.'},
+  {p:'p2',pn:'Problem',pc:'#d84315',cat:'Compliance',t:'The consent problem: why timber builds keep coming back from council with engineering queries'},
+  {p:'p2',pn:'Problem',pc:'#d84315',cat:'Target Market',t:'NZ housing crisis: building smarter is one part of the answer. Here is what that looks like.'},
+  {p:'p2',pn:'Problem',pc:'#d84315',cat:'Financial',t:'Weather delays in NZ: how one week of rain can cost a traditional build weeks of time'},
+  {p:'p2',pn:'Problem',pc:'#d84315',cat:'Target Market',t:'First home buyers: buying existing feels impossible. Building might not be. Here is why.'},
+  {p:'p2',pn:'Problem',pc:'#d84315',cat:'Financial',t:'The wrong R-value choice compounds over 20 years. Most people pick the middle and hope.'},
+  {p:'p2',pn:'Problem',pc:'#d84315',cat:'Comparison',t:'10-15 people on a traditional build site. 3-4 people on a SIP build. Why the difference?'},
+  {p:'p3',pn:'Solution',pc:'#2e7d32',cat:'Comparison',t:'SIP vs timber: the wrong comparison is dollars per square metre. The right one is system vs system.'},
+  {p:'p3',pn:'Solution',pc:'#2e7d32',cat:'Applications',t:'3 people. 3 days. A weather-tight home shell. Here is exactly how that is possible.'},
+  {p:'p3',pn:'Solution',pc:'#2e7d32',cat:'Financial',t:'Developers: $500K construction loan at 7% = $2,500 per week. 12 weeks faster = real money saved.'},
+  {p:'p3',pn:'Solution',pc:'#2e7d32',cat:'Technical Specs',t:'The thicker the panel, the less your heating system works. Over 20 years, that difference adds up.'},
+  {p:'p3',pn:'Solution',pc:'#2e7d32',cat:'Compliance',t:'Our system is pre-engineered to NZS 3604 — fewer council queries, faster consent pathway'},
+  {p:'p3',pn:'Solution',pc:'#2e7d32',cat:'Benefits',t:'SIP homes sell faster: warmer, cheaper to run, healthier. Features NZ buyers actually ask about.'},
+  {p:'p3',pn:'Solution',pc:'#2e7d32',cat:'Benefits',t:'Structure, insulation, and airtightness in one step. No second trade. No third step.'},
+  {p:'p3',pn:'Solution',pc:'#2e7d32',cat:'Financial',t:'Earlier completion = earlier rental income. For a rental at $600/week, 12 weeks = $7,200.'},
+  {p:'p3',pn:'Solution',pc:'#2e7d32',cat:'Sustainability',t:'SIP homes repay their carbon footprint through energy savings in 3-4 years'},
+  {p:'p3',pn:'Solution',pc:'#2e7d32',cat:'Benefits',t:'Panels arrive pre-cut and pre-labelled. No cutting on site. No measuring and re-measuring.'},
+  {p:'p3',pn:'Solution',pc:'#2e7d32',cat:'Applications',t:'The bach, the granny flat, the first home — how SIP makes all three faster and more affordable'},
+  {p:'p4',pn:'Trust',pc:'#6a1b9a',cat:'Objection Handling',t:'Your SIP panel build has a 10-year warranty — but only if your builder does this one thing (ventilation)'},
+  {p:'p4',pn:'Trust',pc:'#6a1b9a',cat:'Objection Handling',t:'Do SIP homes last as long as timber? The honest 50-year structural durability answer'},
+  {p:'p4',pn:'Trust',pc:'#6a1b9a',cat:'Compliance',t:'Our panels are pre-engineered to NZS 3604 — here is what that means for your consent timeline'},
+  {p:'p4',pn:'Trust',pc:'#6a1b9a',cat:'Energy',t:'The ventilation requirement: why HRV/ERV is non-negotiable, not optional, in a SIP home'},
+  {p:'p4',pn:'Trust',pc:'#6a1b9a',cat:'Objection Handling',t:'"Will council approve a SIP home?" — yes, here is the pre-approved compliance pathway'},
+  {p:'p4',pn:'Trust',pc:'#6a1b9a',cat:'Compliance',t:'Seismic zones 1-4. Wind zones up to Very High. Buildings up to 10 metres. Rated for almost everywhere in NZ.'},
+  {p:'p4',pn:'Trust',pc:'#6a1b9a',cat:'Objection Handling',t:'"Can I run plumbing inside SIP panels?" — the honest answer and what you do instead'},
+  {p:'p4',pn:'Trust',pc:'#6a1b9a',cat:'Objection Handling',t:'"Do I need a specialist SIP builder?" — what skill level is actually required on site'},
+  {p:'p4',pn:'Trust',pc:'#6a1b9a',cat:'Objection Handling',t:'"What happens if a SIP panel gets wet?" — storage, exposure limits, and repair process'},
+  {p:'p4',pn:'Trust',pc:'#6a1b9a',cat:'Sustainability',t:'EPS core is 98% air. Triboard uses 90% of each log. SIP reduces site waste by up to 60%.'},
+  {p:'p5',pn:'Convert',pc:'#e65100',cat:'Target Market',t:'Drop your location in the comments — we will tell you which panel thickness suits your build'},
+  {p:'p5',pn:'Convert',pc:'#e65100',cat:'Financial',t:'Developers: comment ROI and we will share the full developer cashflow breakdown'},
+  {p:'p5',pn:'Convert',pc:'#e65100',cat:'Target Market',t:'Architects and builders: head to supersub.co.nz to download our SIP Technical Document free'},
+  {p:'p5',pn:'Convert',pc:'#e65100',cat:'Applications',t:'Planning to build in the next 12 months? Here is your smartest first step with SuperSub'},
+  {p:'p5',pn:'Convert',pc:'#e65100',cat:'Target Market',t:'If you have land in NZ, building with SIP could cost less than buying existing — here is the maths'},
+  {p:'p5',pn:'Convert',pc:'#e65100',cat:'Target Market',t:'Builders: our panels arrive pre-cut and pre-labelled. Your crew picks up the system in a day.'},
+  {p:'p5',pn:'Convert',pc:'#e65100',cat:'Financial',t:'First home buyer: land + SIP build could get you into your own home faster than saving for existing'},
+  {p:'p5',pn:'Convert',pc:'#e65100',cat:'Applications',t:'Building a bach or holiday home? SIP makes it faster, warmer, and cheaper to run year-round'},
+];
+
+let curFilter='all',curSearch='';
+function renderIdeas(){
+  const f=ideas.filter(i=>{
+    const mp=curFilter==='all'||i.p===curFilter;
+    const ms=curSearch===''||i.t.toLowerCase().includes(curSearch.toLowerCase())||i.cat.toLowerCase().includes(curSearch.toLowerCase())||i.pn.toLowerCase().includes(curSearch.toLowerCase());
+    return mp&&ms;
+  });
+  document.getElementById('ideas-count').textContent=f.length+' ideas';
+  document.getElementById('ideas-grid').innerHTML=f.map(i=>`<div class="idea-card"><div class="ic-pillar" style="background:${i.pc}">${i.pn}</div><div class="ic-cat">${i.cat}</div><div class="ic-text">${i.t}</div></div>`).join('');
+}
+function filterIdeas(p,btn){curFilter=p;document.querySelectorAll('.fbtn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderIdeas();}
+function searchIdeas(v){curSearch=v;renderIdeas();}
+renderIdeas();
+</script>
+</body>
+</html>
