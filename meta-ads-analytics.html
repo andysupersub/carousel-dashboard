@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SuperSub — Meta Ads Analytics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#011648;--blue:#276ce9;--mist:#f0f4fd;--white:#fff;--gray:#f2f3f5;--border:rgba(1,22,72,0.1);--text:#011648;--muted:#7a8aaa;--green:#1a7a4a;--red:#c0392b;--yellow:#b07d00;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Inter',sans-serif;background:var(--gray);color:var(--text);min-height:100vh;display:flex;flex-direction:column;}
+.app-shell{display:flex;flex:1;min-height:0;}
+.sidebar{width:220px;min-width:220px;background:var(--navy);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;}
+.sidebar-logo{padding:20px 20px 12px;font-size:18px;font-weight:500;letter-spacing:-0.05em;color:#fff;border-bottom:1px solid rgba(255,255,255,0.08);margin-bottom:8px;}
+.sidebar-logo span{color:var(--blue);}
+.sidebar-section{padding:8px 12px 4px;font-size:10px;font-weight:600;letter-spacing:0.08em;color:rgba(255,255,255,0.35);text-transform:uppercase;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 16px;margin:1px 8px;border-radius:7px;cursor:pointer;font-size:13px;font-weight:200;color:rgba(255,255,255,0.65);transition:all 0.15s;text-decoration:none;}
+.nav-item:hover{background:rgba(255,255,255,0.07);color:#fff;}
+.nav-item.active{background:rgba(39,108,233,0.2);color:#fff;font-weight:500;}
+.nav-item.active .nav-icon{color:var(--blue);}
+.nav-icon{font-size:14px;width:18px;text-align:center;}
+.nav-divider{border:none;border-top:1px solid rgba(255,255,255,0.08);margin:10px 16px;}
+.sidebar-stats{padding:16px;margin-top:auto;border-top:1px solid rgba(255,255,255,0.08);}
+.sidebar-stat{display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:11px;font-weight:200;color:rgba(255,255,255,0.45);}
+.sidebar-stat b{color:rgba(255,255,255,0.7);font-weight:500;}
+.main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden;}
+.topbar{background:var(--white);border-bottom:1px solid var(--border);padding:0 28px;height:56px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;position:sticky;top:0;z-index:100;}
+.topbar-left{display:flex;align-items:center;gap:10px;}
+.topbar-title{font-size:15px;font-weight:500;letter-spacing:-0.03em;color:var(--navy);}
+.topbar-sub{font-size:11px;font-weight:200;color:var(--muted);}
+.date-picker-wrap{position:relative;}
+.date-btn{display:flex;align-items:center;gap:6px;padding:7px 14px;border:1.5px solid var(--border);border-radius:7px;font-size:12px;font-weight:500;font-family:'Inter',sans-serif;color:var(--navy);background:var(--white);cursor:pointer;}
+.date-btn:hover{border-color:var(--blue);}
+.date-dropdown{position:absolute;top:calc(100% + 6px);right:0;background:var(--white);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 32px rgba(1,22,72,0.12);z-index:200;min-width:180px;padding:6px 0;display:none;}
+.date-dropdown.open{display:block;}
+.date-option{padding:9px 16px;font-size:12px;font-weight:200;cursor:pointer;color:var(--text);}
+.date-option:hover{background:var(--mist);}
+.date-option.active{color:var(--blue);font-weight:500;}
+.overview-bar{background:var(--white);border-bottom:1px solid var(--border);padding:16px 28px;display:flex;gap:16px;flex-shrink:0;overflow-x:auto;}
+.ov-card{min-width:150px;padding:12px 16px;border:1px solid var(--border);border-radius:10px;background:var(--gray);}
+.ov-label{font-size:10px;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;color:var(--muted);margin-bottom:4px;}
+.ov-value{font-size:20px;font-weight:500;letter-spacing:-0.05em;color:var(--navy);line-height:1;}
+.ov-sub{font-size:10px;font-weight:200;color:var(--muted);margin-top:2px;}
+.table-wrap{padding:20px 28px;flex:1;overflow:hidden;display:flex;flex-direction:column;}
+.table-toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.table-info{font-size:12px;font-weight:200;color:var(--muted);}
+.table-hint{font-size:11px;color:var(--muted);font-style:italic;}
+.ads-table-scroll{overflow-x:auto;border:1px solid var(--border);border-radius:10px;flex:1;}
+.ads-table{width:100%;min-width:1400px;border-collapse:collapse;background:var(--white);}
+.ads-table thead tr{background:var(--navy);}
+.ads-table th{padding:11px 14px;font-size:10px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:rgba(255,255,255,0.55);text-align:right;white-space:nowrap;}
+.ads-table th:first-child{text-align:left;min-width:300px;position:sticky;left:0;z-index:3;background:var(--navy);}
+.ads-table th:nth-child(2){text-align:left;}
+.ads-table td{padding:11px 14px;font-size:12px;font-weight:200;border-bottom:1px solid var(--border);text-align:right;white-space:nowrap;}
+.ads-table td:first-child{text-align:left;position:sticky;left:0;background:var(--white);z-index:1;min-width:300px;}
+.ads-table td:nth-child(2){text-align:left;}
+.ads-table tr:last-child td{border-bottom:none;}
+.ads-table tr:hover td{background:#f8f9fd;}
+.ads-table tr:hover td:first-child{background:#f8f9fd;}
+.row-adset td{background:#fafbff;}.row-adset td:first-child{background:#fafbff;padding-left:14px;}
+.row-adset:hover td,.row-adset:hover td:first-child{background:#f3f5fc!important;}
+.row-ad td{background:#f8f9fb;}.row-ad td:first-child{background:#f8f9fb;padding-left:28px;}
+.row-ad:hover td,.row-ad:hover td:first-child{background:#f0f2f8!important;}
+.name-cell{display:flex;align-items:center;gap:7px;}
+.row-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px;font-weight:500;}
+.row-adset .row-name{font-weight:400;}.row-ad .row-name{font-weight:200;color:var(--muted);}
+.expand-btn{width:18px;height:18px;border:none;background:none;cursor:pointer;color:var(--blue);font-size:10px;display:inline-flex;align-items:center;justify-content:center;transition:transform 0.2s;border-radius:3px;flex-shrink:0;}
+.expand-btn:hover{background:var(--mist);}
+.expand-btn.expanded{transform:rotate(90deg);}
+.no-expand{width:18px;display:inline-block;flex-shrink:0;}
+.obj-badge{font-size:9px;font-weight:600;padding:2px 7px;border-radius:10px;letter-spacing:0.03em;text-transform:uppercase;flex-shrink:0;}
+.obj-leads{background:rgba(26,122,74,0.12);color:#1a7a4a;}
+.obj-sales{background:rgba(39,108,233,0.12);color:#276ce9;}
+.obj-awareness{background:rgba(139,47,201,0.1);color:#8b2fc9;}
+.obj-traffic{background:rgba(176,125,0,0.12);color:#b07d00;}
+.obj-engagement{background:rgba(192,57,43,0.1);color:#c0392b;}
+.obj-app{background:rgba(0,122,174,0.1);color:#007aae;}
+.status-badge{font-size:9px;font-weight:600;padding:3px 8px;border-radius:10px;}
+.status-active{background:rgba(26,122,74,0.1);color:#1a7a4a;}
+.status-paused{background:rgba(120,120,120,0.1);color:#666;}
+.ad-thumb{width:28px;height:28px;border-radius:4px;object-fit:cover;border:1px solid var(--border);flex-shrink:0;}
+.ad-no-thumb{width:28px;height:28px;border-radius:4px;background:var(--mist);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--muted);flex-shrink:0;}
+.notes-btn{background:none;border:1px solid var(--border);border-radius:5px;padding:3px 9px;font-size:10px;font-weight:500;font-family:'Inter',sans-serif;cursor:pointer;color:var(--muted);transition:all 0.15s;white-space:nowrap;}
+.notes-btn:hover{border-color:var(--navy);color:var(--navy);}
+.loading-row td{text-align:center;padding:50px;color:var(--muted);font-size:12px;}
+.spinner{display:inline-block;width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin 0.7s linear infinite;vertical-align:middle;margin-right:8px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.empty-row td{text-align:center;padding:50px;color:var(--muted);font-size:12px;font-style:italic;}
+/* Notes panel */
+.notes-overlay{display:none;position:fixed;inset:0;background:rgba(1,22,72,0.4);z-index:400;backdrop-filter:blur(2px);}
+.notes-overlay.open{display:block;}
+.notes-panel{position:fixed;top:0;right:-480px;width:460px;height:100vh;background:var(--white);z-index:401;display:flex;flex-direction:column;box-shadow:-8px 0 40px rgba(1,22,72,0.15);transition:right 0.3s ease;}
+.notes-panel.open{right:0;}
+.notes-header{background:var(--navy);padding:16px 22px;flex-shrink:0;}
+.notes-header-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;}
+.notes-title{font-size:13px;font-weight:500;color:#fff;}
+.notes-sub{font-size:11px;font-weight:200;color:rgba(255,255,255,0.5);}
+.notes-close{width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,0.15);border:none;color:#fff;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.notes-list{flex:1;overflow-y:auto;padding:16px 22px;display:flex;flex-direction:column;gap:10px;}
+.note-item{background:var(--mist);border-radius:8px;padding:11px 14px;}
+.note-top{display:flex;justify-content:space-between;margin-bottom:5px;}
+.note-author{font-size:11px;font-weight:500;color:var(--navy);}
+.note-time{font-size:10px;font-weight:200;color:var(--muted);}
+.note-text{font-size:12px;font-weight:200;line-height:1.6;}
+.notes-empty{text-align:center;padding:40px;color:var(--muted);font-size:12px;font-style:italic;}
+.notes-form{border-top:1px solid var(--border);padding:16px 22px;flex-shrink:0;}
+.notes-author-input{width:100%;border:1px solid var(--border);border-radius:7px;padding:7px 10px;font-size:12px;font-family:'Inter',sans-serif;outline:none;margin-bottom:8px;}
+.notes-author-input:focus{border-color:var(--blue);}
+.notes-textarea{width:100%;border:1px solid var(--border);border-radius:7px;padding:9px 12px;font-size:12px;font-family:'Inter',sans-serif;outline:none;resize:none;height:72px;margin-bottom:8px;}
+.notes-textarea:focus{border-color:var(--blue);}
+.notes-add-btn{background:var(--navy);color:#fff;border:none;border-radius:7px;padding:8px 16px;font-size:12px;font-weight:500;font-family:'Inter',sans-serif;cursor:pointer;width:100%;}
+.notes-add-btn:hover{opacity:0.85;}
+.notes-add-btn:disabled{opacity:0.4;cursor:not-allowed;}
+footer{text-align:center;padding:20px;font-size:11px;font-weight:200;color:var(--muted);border-top:1px solid var(--border);background:var(--white);}
+</style>
+</head>
+<body>
+<div class="app-shell">
+
+<div class="sidebar">
+  <div class="sidebar-logo">Super<span>Sub</span></div>
+  <div style="height:8px"></div>
+  <div class="sidebar-section">Content</div>
+  <a href="index.html" class="nav-item"><span class="nav-icon">&#9783;</span> Carousels</a>
+  <a href="index.html" class="nav-item"><span class="nav-icon">&#9654;</span> Videos</a>
+  <hr class="nav-divider">
+  <div class="sidebar-section">Publish</div>
+  <div class="nav-item"><span class="nav-icon">&#128197;</span> Schedule</div>
+  <div class="nav-item"><span class="nav-icon">&#128202;</span> Analytics</div>
+  <hr class="nav-divider">
+  <div class="sidebar-section">Advertising</div>
+  <a href="meta-ads-plan.html" class="nav-item"><span class="nav-icon">&#9646;&#9646;</span> Meta Ads Plan</a>
+  <a href="meta-ads-analytics.html" class="nav-item active"><span class="nav-icon">&#128200;</span> Meta Ads Analytics</a>
+  <hr class="nav-divider">
+  <div class="sidebar-section">Strategy</div>
+  <a href="snaplock-wall-framework.html" class="nav-item"><span class="nav-icon">&#129521;</span> Snaplock Wall</a>
+  <a href="sip-panel-framework.html" class="nav-item"><span class="nav-icon">&#127959;</span> SIP Panel</a>
+  <div class="sidebar-stats">
+    <div class="sidebar-stat"><span>Campaigns</span><b id="sb-campaigns">—</b></div>
+    <div class="sidebar-stat"><span>Active</span><b id="sb-active">—</b></div>
+    <div class="sidebar-stat"><span>Total Spend</span><b id="sb-spend">—</b></div>
+  </div>
+</div>
+
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-title">Meta Ads Analytics</div>
+      <span class="topbar-sub">Live data · Read-only</span>
+    </div>
+    <div class="date-picker-wrap">
+      <button class="date-btn" onclick="toggleDatePicker()">📅 <span id="date-label">Last 30 days</span> ▾</button>
+      <div class="date-dropdown" id="date-dropdown">
+        <div class="date-option" onclick="setDatePreset('today','Today')">Today</div>
+        <div class="date-option" onclick="setDatePreset('yesterday','Yesterday')">Yesterday</div>
+        <div class="date-option" onclick="setDatePreset('last_7d','Last 7 days')">Last 7 days</div>
+        <div class="date-option" onclick="setDatePreset('last_14d','Last 14 days')">Last 14 days</div>
+        <div class="date-option active" onclick="setDatePreset('last_30d','Last 30 days')">Last 30 days</div>
+        <div class="date-option" onclick="setDatePreset('this_month','This month')">This month</div>
+        <div class="date-option" onclick="setDatePreset('last_month','Last month')">Last month</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="overview-bar">
+    <div class="ov-card"><div class="ov-label">Amount Spent</div><div class="ov-value" id="ov-spend">—</div><div class="ov-sub">NZD</div></div>
+    <div class="ov-card"><div class="ov-label">Reach</div><div class="ov-value" id="ov-reach">—</div><div class="ov-sub">Unique people</div></div>
+    <div class="ov-card"><div class="ov-label">Impressions</div><div class="ov-value" id="ov-impr">—</div><div class="ov-sub">Total</div></div>
+    <div class="ov-card"><div class="ov-label">Results</div><div class="ov-value" id="ov-results">—</div><div class="ov-sub">All objectives</div></div>
+    <div class="ov-card"><div class="ov-label">Cost / Result</div><div class="ov-value" id="ov-cpr">—</div><div class="ov-sub">NZD avg.</div></div>
+    <div class="ov-card"><div class="ov-label">Link Clicks</div><div class="ov-value" id="ov-clicks">—</div><div class="ov-sub" id="ov-ctr">CTR —</div></div>
+  </div>
+
+  <div class="table-wrap">
+    <div class="table-toolbar">
+      <div class="table-info" id="table-info">Loading...</div>
+      <div class="table-hint">Click ▶ to expand · 📝 to add notes</div>
+    </div>
+    <div class="ads-table-scroll">
+      <table class="ads-table">
+        <thead><tr>
+          <th>Campaign / Ad Set / Ad</th>
+          <th>Status</th>
+          <th>Budget</th>
+          <th>Spent</th>
+          <th>Results</th>
+          <th>Cost/Result</th>
+          <th>Reach</th>
+          <th>Impressions</th>
+          <th>Freq.</th>
+          <th>CPM</th>
+          <th>Link Clicks</th>
+          <th>CTR</th>
+          <th>CPC</th>
+          <th>Purchases</th>
+          <th>Cost/Purchase</th>
+          <th>ROAS</th>
+          <th>Leads</th>
+          <th>Cost/Lead</th>
+          <th></th>
+        </tr></thead>
+        <tbody id="tbody"><tr class="loading-row"><td colspan="19"><div class="spinner"></div>Loading campaigns...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+  <footer>SuperSub Limited · supersub.co.nz · Meta Ads Analytics · Read-only live data</footer>
+</div>
+</div>
+
+<!-- Notes -->
+<div class="notes-overlay" id="notes-overlay" onclick="closeNotes()"></div>
+<div class="notes-panel" id="notes-panel">
+  <div class="notes-header">
+    <div class="notes-header-top"><div class="notes-title" id="notes-title">Notes</div><button class="notes-close" onclick="closeNotes()">✕</button></div>
+    <div class="notes-sub" id="notes-sub"></div>
+  </div>
+  <div class="notes-list" id="notes-list"></div>
+  <div class="notes-form">
+    <input class="notes-author-input" id="notes-author" type="text" placeholder="Your name" value="Team" maxlength="40" />
+    <textarea class="notes-textarea" id="notes-text" placeholder="Add a note..."></textarea>
+    <button class="notes-add-btn" id="notes-add-btn" onclick="submitNote()">Add Note</button>
+  </div>
+</div>
+
+<script>
+const SURL='https://wljoyrwjculthelfgzth.supabase.co';
+const SKEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indsam95cndqY3VsdGhlbGZnenRoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1ODM1MTEsImV4cCI6MjA5MDE1OTUxMX0.8f3NV96YP9jOj__W9XiEDIiJ2gFlyBK53wnQJ1Tp6X0';
+const SH={'apikey':SKEY,'Authorization':`Bearer ${SKEY}`,'Content-Type':'application/json'};
+let currentDatePreset='last_30d', notesCtx=null;
+
+const NZD=n=>{if(!n||isNaN(+n))return'—';const v=+n;return v>=1000?`NZ$${(v/1000).toFixed(1)}k`:`NZ$${v.toFixed(2)}`;};
+const fmtN=n=>(!n||isNaN(parseInt(n)))?'—':parseInt(n).toLocaleString();
+const fmtPct=n=>(!n||isNaN(+n))?'—':`${(+n).toFixed(2)}%`;
+const fmtF=n=>(!n||isNaN(+n))?'—':(+n).toFixed(2);
+const fmtROAS=n=>(!n||isNaN(+n))?'—':`${(+n).toFixed(2)}x`;
+const fmtBudget=(d,l)=>{if(d&&+d>0)return`NZ$${(+d/100).toFixed(0)}/day`;if(l&&+l>0)return`NZ$${(+l/100).toFixed(0)} total`;return'—';};
+const ago=d=>{const m=Math.floor((Date.now()-new Date(d))/60000);if(m<1)return'just now';if(m<60)return`${m}m ago`;const h=Math.floor(m/60);if(h<24)return`${h}h ago`;return`${Math.floor(h/24)}d ago`;};
+
+const ins=(o,f)=>o?.insights?.data?.[0]?.[f]??null;
+const getAction=(o,t)=>{const a=ins(o,'actions');return a?.find(x=>x.action_type===t)?.value??null;};
+const getCPA=(o,t)=>{const a=ins(o,'cost_per_action_type');return a?.find(x=>x.action_type===t)?.value??null;};
+const getRoas=o=>{const r=ins(o,'purchase_roas');return r?.find(x=>x.action_device==='total')?.value??r?.[0]?.value??null;};
+
+const OBJ={OUTCOME_SALES:{label:'Sales',cls:'obj-sales',action:'purchase',al:'Purchases'},OUTCOME_LEADS:{label:'Leads',cls:'obj-leads',action:'lead',al:'Leads'},OUTCOME_TRAFFIC:{label:'Traffic',cls:'obj-traffic',action:'link_click',al:'Clicks'},OUTCOME_ENGAGEMENT:{label:'Engagement',cls:'obj-engagement',action:'post_engagement',al:'Engagements'},OUTCOME_AWARENESS:{label:'Awareness',cls:'obj-awareness',action:'reach',al:'Reach'},OUTCOME_APP_PROMOTION:{label:'App',cls:'obj-app',action:'mobile_app_install',al:'Installs'}};
+const getObj=k=>OBJ[k]||{label:k||'—',cls:'',action:'link_click',al:'Results'};
+const statusBadge=s=>s==='ACTIVE'?'<span class="status-badge status-active">Active</span>':'<span class="status-badge status-paused">Paused</span>';
+
+function toggleDatePicker(){document.getElementById('date-dropdown').classList.toggle('open');}
+document.addEventListener('click',e=>{if(!e.target.closest('.date-picker-wrap'))document.getElementById('date-dropdown').classList.remove('open');});
+function setDatePreset(p,l){currentDatePreset=p;document.getElementById('date-label').textContent=l;document.querySelectorAll('.date-option').forEach(o=>o.classList.remove('active'));event.target.classList.add('active');document.getElementById('date-dropdown').classList.remove('open');loadCampaigns();}
+
+async function metaGet(type,id){const p=new URLSearchParams({type,date_preset:currentDatePreset});if(id)p.set('id',id);const r=await fetch(`/api/meta?${p}`);const d=await r.json();if(!r.ok)throw new Error(d.error||r.status);return d;}
+
+function buildCampaignRow(c){
+  const obj=getObj(c.objective);
+  const spend=ins(c,'spend'),results=getAction(c,obj.action),cpr=getCPA(c,obj.action);
+  const purchases=getAction(c,'purchase'),costP=getCPA(c,'purchase'),roas=getRoas(c);
+  const leads=getAction(c,'lead'),costL=getCPA(c,'lead');
+  const tr=document.createElement('tr');tr.className='row-campaign';tr.dataset.id=c.id;
+  tr.innerHTML=`<td><div class="name-cell"><button class="expand-btn" id="exp-${c.id}" onclick="handleExpand('${c.id}','campaign')">▶</button><span class="row-name" title="${c.name}">${c.name}</span><span class="obj-badge ${obj.cls}">${obj.label}</span></div></td>
+  <td>${statusBadge(c.status)}</td><td>${fmtBudget(c.daily_budget,c.lifetime_budget)}</td>
+  <td style="font-weight:500">${NZD(spend)}</td>
+  <td style="font-weight:500;color:var(--blue)">${results?`${fmtN(results)} <span style="font-size:9px;font-weight:200;color:var(--muted)">${obj.al}</span>`:'—'}</td>
+  <td>${NZD(cpr)}</td><td>${fmtN(ins(c,'reach'))}</td><td>${fmtN(ins(c,'impressions'))}</td>
+  <td>${fmtF(ins(c,'frequency'))}</td><td>${NZD(ins(c,'cpm'))}</td><td>${fmtN(ins(c,'clicks'))}</td>
+  <td>${fmtPct(ins(c,'ctr'))}</td><td>${NZD(ins(c,'cpc'))}</td><td>${fmtN(purchases)}</td>
+  <td>${NZD(costP)}</td><td>${roas?`<span style="color:${+roas>=2?'var(--green)':'inherit'}">${fmtROAS(roas)}</span>`:'—'}</td>
+  <td>${fmtN(leads)}</td><td>${NZD(costL)}</td>
+  <td><button class="notes-btn" onclick="openNotes('${c.id}','campaign','${c.name.replace(/'/g,"\\'")}')">📝 Notes</button></td>`;
+  return tr;
+}
+function buildAdSetRow(as,campId){
+  const spend=ins(as,'spend'),purchases=getAction(as,'purchase'),costP=getCPA(as,'purchase'),leads=getAction(as,'lead'),costL=getCPA(as,'lead'),roas=getRoas(as);
+  const tr=document.createElement('tr');tr.className='row-adset';tr.dataset.id=as.id;tr.dataset.parentCampaign=campId;tr.style.display='none';
+  tr.innerHTML=`<td><div class="name-cell" style="padding-left:4px"><button class="expand-btn" id="exp-${as.id}" onclick="handleExpand('${as.id}','adset')">▶</button><span class="row-name" title="${as.name}">${as.name}</span></div></td>
+  <td>${statusBadge(as.status)}</td><td>${fmtBudget(as.daily_budget,as.lifetime_budget)}</td>
+  <td style="font-weight:500">${NZD(spend)}</td><td>—</td><td>—</td>
+  <td>${fmtN(ins(as,'reach'))}</td><td>${fmtN(ins(as,'impressions'))}</td>
+  <td>${fmtF(ins(as,'frequency'))}</td><td>${NZD(ins(as,'cpm'))}</td><td>${fmtN(ins(as,'clicks'))}</td>
+  <td>${fmtPct(ins(as,'ctr'))}</td><td>${NZD(ins(as,'cpc'))}</td>
+  <td>${fmtN(purchases)}</td><td>${NZD(costP)}</td><td>${roas?fmtROAS(roas):'—'}</td>
+  <td>${fmtN(leads)}</td><td>${NZD(costL)}</td>
+  <td><button class="notes-btn" onclick="openNotes('${as.id}','adset','${as.name.replace(/'/g,"\\'")}')">📝 Notes</button></td>`;
+  return tr;
+}
+function buildAdRow(ad,adSetId){
+  const thumb=ad.creative?.thumbnail_url,spend=ins(ad,'spend'),purchases=getAction(ad,'purchase'),costP=getCPA(ad,'purchase'),leads=getAction(ad,'lead'),costL=getCPA(ad,'lead');
+  const tr=document.createElement('tr');tr.className='row-ad';tr.dataset.id=ad.id;tr.dataset.parentAdset=adSetId;tr.style.display='none';
+  tr.innerHTML=`<td><div class="name-cell" style="padding-left:8px"><span class="no-expand"></span>${thumb?`<img class="ad-thumb" src="${thumb}" alt="Ad"/>`:`<div class="ad-no-thumb">AD</div>`}<span class="row-name" title="${ad.name}">${ad.name}</span></div></td>
+  <td>${statusBadge(ad.status)}</td><td>—</td>
+  <td style="font-weight:500">${NZD(spend)}</td><td>—</td><td>—</td>
+  <td>${fmtN(ins(ad,'reach'))}</td><td>${fmtN(ins(ad,'impressions'))}</td>
+  <td>${fmtF(ins(ad,'frequency'))}</td><td>${NZD(ins(ad,'cpm'))}</td><td>${fmtN(ins(ad,'clicks'))}</td>
+  <td>${fmtPct(ins(ad,'ctr'))}</td><td>${NZD(ins(ad,'cpc'))}</td>
+  <td>${fmtN(purchases)}</td><td>${NZD(costP)}</td><td>—</td>
+  <td>${fmtN(leads)}</td><td>${NZD(costL)}</td>
+  <td><button class="notes-btn" onclick="openNotes('${ad.id}','ad','${ad.name.replace(/'/g,"\\'")}')">📝 Notes</button></td>`;
+  return tr;
+}
+
+async function handleExpand(id,type){
+  const btn=document.getElementById(`exp-${id}`);
+  const isExp=btn.classList.contains('expanded');
+  if(isExp){
+    const sel=type==='campaign'?`[data-parent-campaign="${id}"]`:`[data-parent-adset="${id}"]`;
+    document.querySelectorAll(sel).forEach(r=>{
+      if(type==='campaign'){const asId=r.dataset.id;document.querySelectorAll(`[data-parent-adset="${asId}"]`).forEach(x=>x.style.display='none');const b=document.getElementById(`exp-${asId}`);if(b)b.classList.remove('expanded');}
+      r.style.display='none';
+    });
+    btn.classList.remove('expanded');return;
+  }
+  const sel=type==='campaign'?`[data-parent-campaign="${id}"]`:`[data-parent-adset="${id}"]`;
+  if(document.querySelectorAll(sel).length>0){document.querySelectorAll(sel).forEach(r=>r.style.display='table-row');btn.classList.add('expanded');return;}
+  btn.textContent='⟳';btn.style.animation='spin 0.7s linear infinite';
+  try{
+    const data=await metaGet(type==='campaign'?'adsets':'ads',id);
+    const items=data.data||[];
+    const parent=document.querySelector(`[data-id="${id}"]`);
+    let after=parent;
+    while(after.nextSibling?.dataset&&(after.nextSibling.dataset.parentCampaign===id||after.nextSibling.dataset.parentAdset===id))after=after.nextSibling;
+    if(!items.length){
+      const e=document.createElement('tr');e.dataset[type==='campaign'?'parentCampaign':'parentAdset']=id;e.style.display='table-row';
+      e.innerHTML=`<td colspan="19" style="padding:8px 14px 8px ${type==='campaign'?'48px':'72px'};font-size:11px;color:var(--muted);font-style:italic;background:${type==='campaign'?'#fafbff':'#f8f9fb'}">No ${type==='campaign'?'ad sets':'ads'} found.</td>`;
+      after.insertAdjacentElement('afterend',e);
+    }else{
+      [...items].reverse().forEach(item=>{
+        const row=type==='campaign'?buildAdSetRow(item,id):buildAdRow(item,id);
+        row.style.display='table-row';after.insertAdjacentElement('afterend',row);
+      });
+    }
+    btn.classList.add('expanded');
+  }catch(e){btn.textContent='!';setTimeout(()=>{btn.textContent='▶';btn.style.animation='';},2000);return;}
+  btn.textContent='▶';btn.style.animation='';
+}
+
+function updateCards(campaigns){
+  let spend=0,reach=0,impr=0,results=0,clicks=0;
+  campaigns.forEach(c=>{const obj=getObj(c.objective);spend+=+(ins(c,'spend')||0);reach+=+(ins(c,'reach')||0);impr+=+(ins(c,'impressions')||0);results+=+(getAction(c,obj.action)||0);clicks+=+(ins(c,'clicks')||0);});
+  document.getElementById('ov-spend').textContent=spend?NZD(spend):'—';
+  document.getElementById('ov-reach').textContent=reach?fmtN(reach):'—';
+  document.getElementById('ov-impr').textContent=impr?fmtN(impr):'—';
+  document.getElementById('ov-results').textContent=results?fmtN(results):'—';
+  document.getElementById('ov-cpr').textContent=(spend&&results)?NZD(spend/results):'—';
+  document.getElementById('ov-clicks').textContent=clicks?fmtN(clicks):'—';
+  if(impr&&clicks)document.getElementById('ov-ctr').textContent=`CTR ${fmtPct(clicks/impr*100)}`;
+  const active=campaigns.filter(c=>c.status==='ACTIVE').length;
+  document.getElementById('sb-campaigns').textContent=campaigns.length;
+  document.getElementById('sb-active').textContent=active;
+  document.getElementById('sb-spend').textContent=spend?NZD(spend):'—';
+}
+
+async function loadCampaigns(){
+  const tbody=document.getElementById('tbody');
+  tbody.innerHTML='<tr class="loading-row"><td colspan="19"><div class="spinner"></div>Loading campaigns...</td></tr>';
+  try{
+    const data=await metaGet('campaigns');
+    const campaigns=data.data||[];
+    tbody.innerHTML='';
+    if(!campaigns.length){tbody.innerHTML='<tr class="empty-row"><td colspan="19">No campaigns found for this period.</td></tr>';return;}
+    campaigns.forEach(c=>tbody.appendChild(buildCampaignRow(c)));
+    updateCards(campaigns);
+    const active=campaigns.filter(c=>c.status==='ACTIVE').length;
+    document.getElementById('table-info').textContent=`${campaigns.length} campaigns · ${active} active`;
+  }catch(e){
+    tbody.innerHTML=`<tr class="empty-row"><td colspan="19">${e.message}</td></tr>`;
+    document.getElementById('table-info').textContent='Error loading campaigns.';
+  }
+}
+
+async function openNotes(objectId,objectType,objectName){
+  notesCtx={objectId,objectType,objectName};
+  document.getElementById('notes-title').textContent=`Notes — ${objectType.charAt(0).toUpperCase()+objectType.slice(1)}`;
+  document.getElementById('notes-sub').textContent=objectName;
+  document.getElementById('notes-text').value='';
+  document.getElementById('notes-list').innerHTML='<div style="text-align:center;padding:20px;color:var(--muted)"><div class="spinner"></div></div>';
+  document.getElementById('notes-overlay').classList.add('open');
+  document.getElementById('notes-panel').classList.add('open');
+  document.body.style.overflow='hidden';
+  try{const notes=await(await fetch(`${SURL}/rest/v1/meta_notes?object_id=eq.${objectId}&order=created_at.desc`,{headers:SH})).json();renderNotes(notes);}
+  catch(e){document.getElementById('notes-list').innerHTML='<div class="notes-empty">Could not load notes.</div>';}
+}
+function renderNotes(notes){
+  const list=document.getElementById('notes-list');
+  if(!notes.length){list.innerHTML='<div class="notes-empty">No notes yet.</div>';return;}
+  list.innerHTML=notes.map(n=>`<div class="note-item"><div class="note-top"><span class="note-author">${n.author||'Team'}</span><span class="note-time">${ago(n.created_at)}</span></div><div class="note-text">${n.note_text}</div></div>`).join('');
+}
+async function submitNote(){
+  if(!notesCtx)return;
+  const text=document.getElementById('notes-text').value.trim();
+  const author=document.getElementById('notes-author').value.trim()||'Team';
+  if(!text){document.getElementById('notes-text').focus();return;}
+  const btn=document.getElementById('notes-add-btn');btn.disabled=true;btn.textContent='Adding...';
+  try{
+    await fetch(`${SURL}/rest/v1/meta_notes`,{method:'POST',headers:{...SH,'Prefer':'return=representation'},body:JSON.stringify({object_id:notesCtx.objectId,object_type:notesCtx.objectType,object_name:notesCtx.objectName,note_text:text,author})});
+    document.getElementById('notes-text').value='';
+    const notes=await(await fetch(`${SURL}/rest/v1/meta_notes?object_id=eq.${notesCtx.objectId}&order=created_at.desc`,{headers:SH})).json();
+    renderNotes(notes);
+  }catch(e){alert('Could not add note.');}
+  btn.disabled=false;btn.textContent='Add Note';
+}
+function closeNotes(){document.getElementById('notes-overlay').classList.remove('open');document.getElementById('notes-panel').classList.remove('open');document.body.style.overflow='';notesCtx=null;}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeNotes();});
+loadCampaigns();
+</script>
+</body>
+</html>
