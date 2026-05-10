@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SuperSub — Meta Ads</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy:#011648; --blue:#276ce9; --mist:#f0f4fd;
+  --white:#ffffff; --gray:#f2f3f5;
+  --border:rgba(1,22,72,0.1); --text:#011648; --muted:#7a8aaa;
+  --green:#1a7a4a; --red:#c0392b; --yellow:#e6a817;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Inter',sans-serif;background:var(--gray);color:var(--text);min-height:100vh;display:flex;flex-direction:column;}
+
+/* ── SHELL ── */
+.app-shell{display:flex;flex:1;min-height:0;}
+
+/* ── SIDEBAR ── */
+.sidebar{width:220px;min-width:220px;background:var(--navy);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;}
+.sidebar-logo{padding:20px 20px 12px;font-size:18px;font-weight:500;letter-spacing:-0.05em;color:#fff;border-bottom:1px solid rgba(255,255,255,0.08);margin-bottom:8px;}
+.sidebar-logo span{color:var(--blue);}
+.sidebar-section{padding:8px 12px 4px;font-size:10px;font-weight:600;letter-spacing:0.08em;color:rgba(255,255,255,0.35);text-transform:uppercase;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 16px;margin:1px 8px;border-radius:7px;cursor:pointer;font-size:13px;font-weight:200;color:rgba(255,255,255,0.65);transition:all 0.15s;letter-spacing:-0.01em;text-decoration:none;}
+.nav-item:hover{background:rgba(255,255,255,0.07);color:#fff;}
+.nav-item.active{background:rgba(39,108,233,0.2);color:#fff;font-weight:500;}
+.nav-item.active .nav-icon{color:var(--blue);}
+.nav-icon{font-size:14px;width:18px;text-align:center;}
+.nav-divider{border:none;border-top:1px solid rgba(255,255,255,0.08);margin:10px 16px;}
+.sidebar-stats{padding:16px;margin-top:auto;border-top:1px solid rgba(255,255,255,0.08);}
+.sidebar-stat{display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:11px;font-weight:200;color:rgba(255,255,255,0.45);}
+.sidebar-stat b{color:rgba(255,255,255,0.7);font-weight:500;}
+
+/* ── MAIN ── */
+.main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden;}
+
+/* ── TOPBAR ── */
+.topbar{background:var(--white);border-bottom:1px solid var(--border);padding:0 28px;height:56px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;position:sticky;top:0;z-index:100;}
+.topbar-left{display:flex;align-items:center;gap:12px;}
+.topbar-title{font-size:15px;font-weight:500;letter-spacing:-0.03em;color:var(--navy);}
+.demo-badge{font-size:10px;font-weight:500;padding:3px 8px;border-radius:20px;background:#fff3cd;color:#856404;border:1px solid #ffc107;display:none;}
+.topbar-right{display:flex;align-items:center;gap:10px;}
+
+/* ── DATE RANGE PICKER ── */
+.date-picker-wrap{position:relative;}
+.date-btn{display:flex;align-items:center;gap:6px;padding:7px 14px;border:1.5px solid var(--border);border-radius:7px;font-size:12px;font-weight:500;font-family:'Inter',sans-serif;color:var(--navy);background:var(--white);cursor:pointer;transition:border-color 0.15s;}
+.date-btn:hover{border-color:var(--blue);}
+.date-btn svg{width:14px;height:14px;stroke:var(--muted);}
+.date-dropdown{position:absolute;top:calc(100% + 6px);right:0;background:var(--white);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 32px rgba(1,22,72,0.12);z-index:200;min-width:180px;padding:6px 0;display:none;}
+.date-dropdown.open{display:block;}
+.date-option{padding:9px 16px;font-size:12px;font-weight:200;cursor:pointer;color:var(--text);transition:background 0.1s;}
+.date-option:hover{background:var(--mist);}
+.date-option.active{color:var(--blue);font-weight:500;}
+
+/* ── OVERVIEW CARDS ── */
+.overview-bar{background:var(--white);border-bottom:1px solid var(--border);padding:16px 28px;display:flex;gap:24px;flex-shrink:0;overflow-x:auto;}
+.ov-card{min-width:160px;padding:12px 18px;border:1px solid var(--border);border-radius:10px;background:var(--gray);}
+.ov-label{font-size:10px;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;color:var(--muted);margin-bottom:5px;}
+.ov-value{font-size:22px;font-weight:500;letter-spacing:-0.05em;color:var(--navy);line-height:1;}
+.ov-sub{font-size:10px;font-weight:200;color:var(--muted);margin-top:3px;}
+
+/* ── TABLE WRAP ── */
+.table-wrap{padding:20px 28px;flex:1;overflow:hidden;display:flex;flex-direction:column;}
+.table-toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.table-toolbar-left{font-size:12px;font-weight:200;color:var(--muted);}
+.create-btn{display:flex;align-items:center;gap:6px;background:var(--blue);color:#fff;border:none;border-radius:7px;padding:8px 16px;font-size:12px;font-weight:500;font-family:'Inter',sans-serif;cursor:pointer;transition:opacity 0.2s;}
+.create-btn:hover{opacity:0.85;}
+
+/* ── ADS TABLE ── */
+.ads-table-scroll{overflow-x:auto;border:1px solid var(--border);border-radius:10px;flex:1;}
+.ads-table{width:100%;min-width:1500px;border-collapse:collapse;background:var(--white);}
+.ads-table thead tr{background:var(--navy);}
+.ads-table th{padding:11px 14px;font-size:10px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:rgba(255,255,255,0.55);text-align:right;white-space:nowrap;border-bottom:1px solid rgba(255,255,255,0.05);}
+.ads-table th:first-child{text-align:left;min-width:300px;position:sticky;left:0;z-index:3;background:var(--navy);}
+.ads-table th:nth-child(2){text-align:left;min-width:90px;}
+.ads-table td{padding:11px 14px;font-size:12px;font-weight:200;border-bottom:1px solid var(--border);text-align:right;white-space:nowrap;color:var(--text);}
+.ads-table td:first-child{text-align:left;position:sticky;left:0;background:var(--white);z-index:1;min-width:300px;max-width:300px;}
+.ads-table td:nth-child(2){text-align:left;}
+.ads-table tr:hover td{background:#f8f9fd;}
+.ads-table tr:hover td:first-child{background:#f8f9fd;}
+
+/* Row type styles */
+.row-campaign td:first-child .row-name{font-weight:500;font-size:13px;}
+.row-adset td:first-child{padding-left:12px;}
+.row-adset td:first-child .row-name{font-size:12px;color:var(--text);}
+.row-ad td:first-child{padding-left:24px;}
+.row-ad td:first-child .row-name{font-size:11px;color:var(--muted);}
+.row-adset{background:#fafbff;}
+.row-ad{background:#f8f9fb;}
+
+/* ── EXPAND BUTTON ── */
+.expand-btn{width:18px;height:18px;border:none;background:none;cursor:pointer;color:var(--blue);font-size:10px;display:inline-flex;align-items:center;justify-content:center;transition:transform 0.2s;flex-shrink:0;margin-right:4px;border-radius:3px;}
+.expand-btn:hover{background:var(--mist);}
+.expand-btn.expanded{transform:rotate(90deg);}
+.expand-placeholder{width:22px;display:inline-block;}
+
+/* ── NAME CELL ── */
+.name-cell{display:flex;align-items:center;gap:6px;min-width:0;}
+.row-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px;}
+.obj-badge{font-size:9px;font-weight:600;padding:2px 6px;border-radius:10px;letter-spacing:0.03em;text-transform:uppercase;flex-shrink:0;}
+.obj-leads{background:rgba(26,122,74,0.12);color:#1a7a4a;}
+.obj-sales{background:rgba(39,108,233,0.12);color:#276ce9;}
+.obj-awareness{background:rgba(150,50,200,0.1);color:#8b2fc9;}
+.obj-traffic{background:rgba(230,168,23,0.12);color:#b07d00;}
+.obj-engagement{background:rgba(192,57,43,0.1);color:#c0392b;}
+
+/* Ad creative thumb */
+.ad-thumb{width:28px;height:28px;border-radius:4px;object-fit:cover;border:1px solid var(--border);flex-shrink:0;}
+.ad-thumb-placeholder{width:28px;height:28px;border-radius:4px;background:var(--mist);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--muted);flex-shrink:0;}
+
+/* ── STATUS TOGGLE ── */
+.toggle-wrap{position:relative;width:34px;height:19px;display:inline-flex;align-items:center;flex-shrink:0;}
+.toggle-wrap input{display:none;}
+.toggle-track{position:absolute;inset:0;border-radius:19px;background:#ccc;transition:background 0.2s;cursor:pointer;}
+.toggle-track::after{content:'';position:absolute;width:15px;height:15px;border-radius:50%;background:#fff;top:2px;left:2px;transition:transform 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.2);}
+.toggle-wrap input:checked + .toggle-track{background:var(--green);}
+.toggle-wrap input:checked + .toggle-track::after{transform:translateX(15px);}
+
+/* ── DELIVERY BADGE ── */
+.delivery{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:200;}
+.del-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.del-active .del-dot{background:var(--green);}
+.del-paused .del-dot{background:#aaa;}
+.del-review .del-dot{background:var(--yellow);}
+.del-rejected .del-dot{background:var(--red);}
+.del-active span{color:var(--green);}
+.del-paused span{color:#888;}
+.del-review span{color:var(--yellow);}
+
+/* ── METRIC CELLS ── */
+.metric-good{color:var(--green);font-weight:500;}
+.metric-pos{color:var(--blue);font-weight:500;}
+.metric-neg{color:var(--red);}
+.metric-dim{color:var(--muted);}
+td.spend-cell{font-weight:500;color:var(--navy);}
+td.result-cell{font-weight:500;color:var(--blue);}
+td.roas-cell{font-weight:500;}
+
+/* ── LOADING / EMPTY ── */
+.loading-row td{text-align:center;padding:40px;color:var(--muted);font-size:12px;}
+.spinner{display:inline-block;width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin 0.7s linear infinite;vertical-align:middle;margin-right:8px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.empty-row td{text-align:center;padding:60px 20px;color:var(--muted);font-size:12px;}
+
+/* ── EDIT BUTTON ── */
+.edit-btn{background:none;border:1px solid var(--border);border-radius:5px;padding:3px 9px;font-size:10px;font-weight:500;font-family:'Inter',sans-serif;cursor:pointer;color:var(--muted);transition:all 0.15s;margin-left:4px;}
+.edit-btn:hover{border-color:var(--blue);color:var(--blue);}
+
+/* ── EDIT MODAL ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(1,22,72,0.6);z-index:600;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(3px);}
+.modal-overlay.open{display:flex;}
+.edit-modal{background:var(--white);border-radius:14px;width:100%;max-width:480px;overflow:hidden;box-shadow:0 24px 80px rgba(1,22,72,0.25);}
+.edit-modal-header{background:var(--navy);padding:14px 22px;display:flex;align-items:center;justify-content:space-between;}
+.edit-modal-header h3{font-size:14px;font-weight:500;color:#fff;letter-spacing:-0.03em;}
+.edit-modal-close{width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,0.15);border:none;color:#fff;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.edit-modal-body{padding:22px;display:flex;flex-direction:column;gap:16px;}
+.field-group{display:flex;flex-direction:column;gap:5px;}
+.field-label{font-size:10px;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;color:var(--muted);}
+.field-input{width:100%;border:1px solid var(--border);border-radius:7px;padding:9px 12px;font-size:13px;font-weight:200;font-family:'Inter',sans-serif;color:var(--text);outline:none;transition:border-color 0.2s;background:var(--white);}
+.field-input:focus{border-color:var(--blue);}
+.field-select{width:100%;border:1px solid var(--border);border-radius:7px;padding:9px 12px;font-size:13px;font-weight:200;font-family:'Inter',sans-serif;color:var(--text);outline:none;background:var(--white);cursor:pointer;}
+.edit-modal-footer{padding:14px 22px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;background:var(--white);}
+.btn-cancel{background:none;border:1px solid var(--border);border-radius:7px;padding:8px 16px;font-size:12px;font-weight:200;cursor:pointer;color:var(--muted);font-family:'Inter',sans-serif;}
+.btn-save{background:var(--blue);color:#fff;border:none;border-radius:7px;padding:8px 20px;font-size:12px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif;transition:opacity 0.2s;}
+.btn-save:hover{opacity:0.85;}
+.btn-save:disabled{opacity:0.4;cursor:not-allowed;}
+.edit-status-msg{font-size:11px;padding:8px 12px;border-radius:6px;display:none;margin-top:4px;}
+.edit-status-msg.success{background:#eafaf1;color:#1a7a4a;display:block;}
+.edit-status-msg.error{background:#fff3f3;color:#c0392b;display:block;}
+
+/* Creative preview in ad edit modal */
+.creative-preview{border:1px solid var(--border);border-radius:8px;overflow:hidden;background:var(--mist);aspect-ratio:4/5;max-height:200px;display:flex;align-items:center;justify-content:center;}
+.creative-preview img{width:100%;height:100%;object-fit:cover;}
+.creative-no-preview{font-size:11px;color:var(--muted);font-weight:200;}
+
+/* ── FOOTER ── */
+footer{text-align:center;padding:20px;font-size:11px;font-weight:200;color:var(--muted);border-top:1px solid var(--border);background:var(--white);}
+
+@media(max-width:700px){
+  .sidebar{display:none;}
+  .table-wrap{padding:14px 16px;}
+  .overview-bar{padding:12px 16px;}
+  .topbar{padding:0 16px;}
+}
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-logo">Super<span>Sub</span></div>
+    <div style="height:8px;"></div>
+
+    <div class="sidebar-section">Content</div>
+    <a href="index.html" class="nav-item">
+      <span class="nav-icon">&#9783;</span> Carousels
+    </a>
+    <a href="index.html" class="nav-item" onclick="localStorage.setItem('defaultView','videos')">
+      <span class="nav-icon">&#9654;</span> Videos
+    </a>
+
+    <hr class="nav-divider">
+    <div class="sidebar-section">Publish</div>
+    <div class="nav-item"><span class="nav-icon">&#128197;</span> Schedule</div>
+    <div class="nav-item"><span class="nav-icon">&#128202;</span> Analytics</div>
+
+    <hr class="nav-divider">
+    <div class="sidebar-section">Advertising</div>
+    <div class="nav-item active" id="nav-meta">
+      <span class="nav-icon">&#9646;&#9646;</span> Meta Ads
+    </div>
+
+    <hr class="nav-divider">
+    <div class="sidebar-section">Strategy</div>
+    <a href="snaplock-wall-framework.html" class="nav-item" style="text-decoration:none;">
+      <span class="nav-icon">&#129521;</span> Snaplock Wall
+    </a>
+    <a href="sip-panel-framework.html" class="nav-item" style="text-decoration:none;">
+      <span class="nav-icon">&#127959;</span> SIP Panel
+    </a>
+
+    <div class="sidebar-stats">
+      <div class="sidebar-stat"><span>Campaigns</span><b id="sb-campaigns">—</b></div>
+      <div class="sidebar-stat"><span>Active</span><b id="sb-active">—</b></div>
+      <div class="sidebar-stat"><span>Total Spend</span><b id="sb-spend">—</b></div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title">Meta Ads</div>
+        <span class="demo-badge" id="demo-badge">Demo Mode</span>
+      </div>
+      <div class="topbar-right">
+        <!-- DATE RANGE PICKER -->
+        <div class="date-picker-wrap">
+          <button class="date-btn" id="date-btn" onclick="toggleDatePicker()">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            <span id="date-label">Last 30 days</span>
+            <span style="font-size:9px;color:var(--muted);">▾</span>
+          </button>
+          <div class="date-dropdown" id="date-dropdown">
+            <div class="date-option" onclick="setDatePreset('today','Today')">Today</div>
+            <div class="date-option" onclick="setDatePreset('yesterday','Yesterday')">Yesterday</div>
+            <div class="date-option" onclick="setDatePreset('last_7d','Last 7 days')">Last 7 days</div>
+            <div class="date-option" onclick="setDatePreset('last_14d','Last 14 days')">Last 14 days</div>
+            <div class="date-option active" onclick="setDatePreset('last_30d','Last 30 days')">Last 30 days</div>
+            <div class="date-option" onclick="setDatePreset('this_month','This month')">This month</div>
+            <div class="date-option" onclick="setDatePreset('last_month','Last month')">Last month</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- OVERVIEW CARDS -->
+    <div class="overview-bar">
+      <div class="ov-card">
+        <div class="ov-label">Amount Spent</div>
+        <div class="ov-value" id="ov-spend">—</div>
+        <div class="ov-sub" id="ov-spend-sub">NZD</div>
+      </div>
+      <div class="ov-card">
+        <div class="ov-label">Reach</div>
+        <div class="ov-value" id="ov-reach">—</div>
+        <div class="ov-sub">Unique people</div>
+      </div>
+      <div class="ov-card">
+        <div class="ov-label">Impressions</div>
+        <div class="ov-value" id="ov-impressions">—</div>
+        <div class="ov-sub">Total views</div>
+      </div>
+      <div class="ov-card">
+        <div class="ov-label">Results</div>
+        <div class="ov-value" id="ov-results">—</div>
+        <div class="ov-sub" id="ov-results-sub">Leads + Purchases</div>
+      </div>
+      <div class="ov-card">
+        <div class="ov-label">Avg. Cost/Result</div>
+        <div class="ov-value" id="ov-cpr">—</div>
+        <div class="ov-sub">NZD</div>
+      </div>
+      <div class="ov-card">
+        <div class="ov-label">Link Clicks</div>
+        <div class="ov-value" id="ov-clicks">—</div>
+        <div class="ov-sub" id="ov-ctr">CTR —</div>
+      </div>
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-wrap">
+      <div class="table-toolbar">
+        <div class="table-toolbar-left" id="table-summary">Loading campaigns...</div>
+        <button class="create-btn" onclick="alert('Open Meta Ads Manager to create campaigns.')">
+          + New Campaign
+        </button>
+      </div>
+      <div class="ads-table-scroll">
+        <table class="ads-table">
+          <thead>
+            <tr>
+              <th>Campaign / Ad Set / Ad</th>
+              <th>Delivery</th>
+              <th>Budget</th>
+              <th>Spent</th>
+              <th>Results</th>
+              <th>Cost/Result</th>
+              <th>Reach</th>
+              <th>Impressions</th>
+              <th>Freq.</th>
+              <th>CPM</th>
+              <th>Link Clicks</th>
+              <th>CTR</th>
+              <th>CPC</th>
+              <th>Purchases</th>
+              <th>Cost/Purchase</th>
+              <th>ROAS</th>
+              <th>Leads</th>
+              <th>Cost/Lead</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="ads-tbody">
+            <tr class="loading-row"><td colspan="19"><div class="spinner"></div>Loading campaigns...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <footer>SuperSub Limited &middot; supersub.co.nz &middot; Meta Ads Dashboard</footer>
+  </div>
+</div>
+
+<!-- ═══ EDIT MODAL ═══ -->
+<div class="modal-overlay" id="edit-overlay" onclick="closeEditOnOverlay(event)">
+  <div class="edit-modal">
+    <div class="edit-modal-header">
+      <h3 id="edit-modal-title">Edit Campaign</h3>
+      <button class="edit-modal-close" onclick="closeEditModal()">✕</button>
+    </div>
+    <div class="edit-modal-body" id="edit-modal-body">
+      <!-- Dynamic fields injected here -->
+    </div>
+    <div class="edit-modal-footer">
+      <div class="edit-status-msg" id="edit-status"></div>
+      <button class="btn-cancel" onclick="closeEditModal()">Cancel</button>
+      <button class="btn-save" id="edit-save-btn" onclick="saveEdit()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════
+// CONSTANTS & STATE
+// ══════════════════════════════════════════
+let currentDatePreset = 'last_30d';
+let editTarget = null; // { type, id, data }
+let campaignData = []; // cache
+let isDemo = false;
+
+// ══════════════════════════════════════════
+// FORMATTERS
+// ══════════════════════════════════════════
+const NZD = n => {
+  if (!n || isNaN(parseFloat(n))) return '—';
+  const v = parseFloat(n);
+  if (v >= 1000) return `NZ$${(v/1000).toFixed(1)}k`;
+  return `NZ$${v.toFixed(2)}`;
+};
+const fmtN = n => (!n || isNaN(parseInt(n))) ? '—' : parseInt(n).toLocaleString();
+const fmtPct = n => (!n || isNaN(parseFloat(n))) ? '—' : `${parseFloat(n).toFixed(2)}%`;
+const fmtFreq = n => (!n || isNaN(parseFloat(n))) ? '—' : parseFloat(n).toFixed(2);
+const fmtROAS = n => (!n || isNaN(parseFloat(n))) ? '—' : `${parseFloat(n).toFixed(2)}x`;
+const fmtBudget = (daily, lifetime) => {
+  if (daily && parseInt(daily) > 0) return `NZ$${(parseInt(daily)/100).toFixed(0)}/day`;
+  if (lifetime && parseInt(lifetime) > 0) return `NZ$${(parseInt(lifetime)/100).toFixed(0)} total`;
+  return '—';
+};
+const fmtDate = d => d ? new Date(d).toLocaleDateString('en-NZ',{day:'numeric',month:'short'}) : '';
+
+// ══════════════════════════════════════════
+// INSIGHT HELPERS
+// ══════════════════════════════════════════
+const ins = (obj, field) => obj?.insights?.data?.[0]?.[field] ?? null;
+
+const getAction = (obj, actionType) => {
+  const actions = ins(obj, 'actions');
+  if (!actions) return null;
+  const a = actions.find(x => x.action_type === actionType);
+  return a ? a.value : null;
+};
+
+const getCPA = (obj, actionType) => {
+  const costs = ins(obj, 'cost_per_action_type');
+  if (!costs) return null;
+  const a = costs.find(x => x.action_type === actionType);
+  return a ? a.value : null;
+};
+
+const getRoas = obj => {
+  const roas = ins(obj, 'purchase_roas');
+  if (!roas || !roas.length) return null;
+  const total = roas.find(x => x.action_device === 'total') || roas[0];
+  return total ? total.value : null;
+};
+
+const OBJECTIVE_MAP = {
+  OUTCOME_SALES:       { label:'Sales',      cls:'obj-sales',      action:'purchase',       actionLabel:'Purchases' },
+  OUTCOME_LEADS:       { label:'Leads',      cls:'obj-leads',      action:'lead',           actionLabel:'Leads' },
+  OUTCOME_TRAFFIC:     { label:'Traffic',    cls:'obj-traffic',    action:'link_click',     actionLabel:'Link Clicks' },
+  OUTCOME_ENGAGEMENT:  { label:'Engagement', cls:'obj-engagement', action:'post_engagement',actionLabel:'Engagements' },
+  OUTCOME_AWARENESS:   { label:'Awareness',  cls:'obj-awareness',  action:'reach',          actionLabel:'Reach' },
+};
+
+const getObjectiveMeta = obj => OBJECTIVE_MAP[obj] || { label: obj || '—', cls: '', action: 'link_click', actionLabel: 'Results' };
+
+// ══════════════════════════════════════════
+// DATE PICKER
+// ══════════════════════════════════════════
+function toggleDatePicker() {
+  document.getElementById('date-dropdown').classList.toggle('open');
+}
+document.addEventListener('click', e => {
+  if (!e.target.closest('.date-picker-wrap')) {
+    document.getElementById('date-dropdown').classList.remove('open');
+  }
+});
+function setDatePreset(preset, label) {
+  currentDatePreset = preset;
+  document.getElementById('date-label').textContent = label;
+  document.querySelectorAll('.date-option').forEach(o => o.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('date-dropdown').classList.remove('open');
+  loadCampaigns();
+}
+
+// ══════════════════════════════════════════
+// API CALLS
+// ══════════════════════════════════════════
+async function apiGet(type, id) {
+  const params = new URLSearchParams({ type, date_preset: currentDatePreset });
+  if (id) params.set('id', id);
+  const r = await fetch(`/api/meta?${params}`);
+  if (!r.ok) throw new Error((await r.json()).error || r.status);
+  return r.json();
+}
+
+async function apiUpdate(objectId, fields) {
+  const r = await fetch('/api/meta', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'update', objectId, fields }),
+  });
+  const data = await r.json();
+  if (!r.ok) throw new Error(data.error || 'Update failed');
+  return data;
+}
+
+// ══════════════════════════════════════════
+// ROW BUILDERS
+// ══════════════════════════════════════════
+function buildCampaignRow(c) {
+  const objMeta = getObjectiveMeta(c.objective);
+  const spend = ins(c, 'spend');
+  const results = getAction(c, objMeta.action);
+  const cpr = getCPA(c, objMeta.action);
+  const purchases = getAction(c, 'purchase');
+  const costPurchase = getCPA(c, 'purchase');
+  const leads = getAction(c, 'lead');
+  const costLead = getCPA(c, 'lead');
+  const roas = getRoas(c);
+  const isActive = c.status === 'ACTIVE';
+
+  const tr = document.createElement('tr');
+  tr.className = 'row-campaign';
+  tr.dataset.id = c.id;
+  tr.innerHTML = `
+    <td>
+      <div class="name-cell">
+        <label class="toggle-wrap" title="${isActive ? 'Pause' : 'Activate'}">
+          <input type="checkbox" ${isActive ? 'checked' : ''} onchange="quickToggle('campaign','${c.id}',this)">
+          <div class="toggle-track"></div>
+        </label>
+        <button class="expand-btn" id="exp-${c.id}" onclick="handleExpand('${c.id}','campaign')" title="Expand ad sets">▶</button>
+        <span class="row-name" title="${c.name}">${c.name}</span>
+        <span class="obj-badge ${objMeta.cls}">${objMeta.label}</span>
+      </div>
+    </td>
+    <td>
+      <div class="delivery ${isActive ? 'del-active' : 'del-paused'}">
+        <div class="del-dot"></div>
+        <span>${isActive ? 'Active' : 'Paused'}</span>
+      </div>
+    </td>
+    <td>${fmtBudget(c.daily_budget, c.lifetime_budget)}</td>
+    <td class="spend-cell">${NZD(spend)}</td>
+    <td class="result-cell">${results ? `${fmtN(results)} <span style="font-size:9px;font-weight:200;color:var(--muted)">${objMeta.actionLabel}</span>` : '—'}</td>
+    <td>${NZD(cpr)}</td>
+    <td>${fmtN(ins(c,'reach'))}</td>
+    <td>${fmtN(ins(c,'impressions'))}</td>
+    <td>${fmtFreq(ins(c,'frequency'))}</td>
+    <td>${NZD(ins(c,'cpm'))}</td>
+    <td>${fmtN(ins(c,'clicks'))}</td>
+    <td>${fmtPct(ins(c,'ctr'))}</td>
+    <td>${NZD(ins(c,'cpc'))}</td>
+    <td>${fmtN(purchases)}</td>
+    <td>${NZD(costPurchase)}</td>
+    <td class="roas-cell">${roas ? `<span style="color:${parseFloat(roas)>=2?'var(--green)':'var(--text)'}">${fmtROAS(roas)}</span>` : '—'}</td>
+    <td>${fmtN(leads)}</td>
+    <td>${NZD(costLead)}</td>
+    <td><button class="edit-btn" onclick="openEditModal('campaign','${c.id}',${JSON.stringify(c).replace(/"/g,'&quot;')})">Edit</button></td>
+  `;
+  return tr;
+}
+
+function buildAdSetRow(as, campaignId) {
+  const isActive = as.status === 'ACTIVE';
+  const spend = ins(as, 'spend');
+  const purchases = getAction(as, 'purchase');
+  const costPurchase = getCPA(as, 'purchase');
+  const leads = getAction(as, 'lead');
+  const costLead = getCPA(as, 'lead');
+  const roas = getRoas(as);
+  const budget = fmtBudget(as.daily_budget, as.lifetime_budget);
+
+  const tr = document.createElement('tr');
+  tr.className = 'row-adset';
+  tr.dataset.id = as.id;
+  tr.dataset.parentCampaign = campaignId;
+  tr.style.display = 'none';
+  tr.innerHTML = `
+    <td>
+      <div class="name-cell">
+        <label class="toggle-wrap" title="${isActive ? 'Pause' : 'Activate'}">
+          <input type="checkbox" ${isActive ? 'checked' : ''} onchange="quickToggle('adset','${as.id}',this)">
+          <div class="toggle-track"></div>
+        </label>
+        <button class="expand-btn" id="exp-${as.id}" onclick="handleExpand('${as.id}','adset')" title="Expand ads">▶</button>
+        <span class="row-name" title="${as.name}">${as.name}</span>
+      </div>
+    </td>
+    <td>
+      <div class="delivery ${isActive ? 'del-active' : 'del-paused'}">
+        <div class="del-dot"></div><span>${isActive ? 'Active' : 'Paused'}</span>
+      </div>
+    </td>
+    <td>${budget}</td>
+    <td class="spend-cell">${NZD(spend)}</td>
+    <td>—</td>
+    <td>—</td>
+    <td>${fmtN(ins(as,'reach'))}</td>
+    <td>${fmtN(ins(as,'impressions'))}</td>
+    <td>${fmtFreq(ins(as,'frequency'))}</td>
+    <td>${NZD(ins(as,'cpm'))}</td>
+    <td>${fmtN(ins(as,'clicks'))}</td>
+    <td>${fmtPct(ins(as,'ctr'))}</td>
+    <td>${NZD(ins(as,'cpc'))}</td>
+    <td>${fmtN(purchases)}</td>
+    <td>${NZD(costPurchase)}</td>
+    <td class="roas-cell">${roas ? fmtROAS(roas) : '—'}</td>
+    <td>${fmtN(leads)}</td>
+    <td>${NZD(costLead)}</td>
+    <td><button class="edit-btn" onclick="openEditModal('adset','${as.id}',${JSON.stringify(as).replace(/"/g,'&quot;')})">Edit</button></td>
+  `;
+  return tr;
+}
+
+function buildAdRow(ad, adSetId) {
+  const isActive = ad.status === 'ACTIVE';
+  const spend = ins(ad, 'spend');
+  const purchases = getAction(ad, 'purchase');
+  const costPurchase = getCPA(ad, 'purchase');
+  const leads = getAction(ad, 'lead');
+  const costLead = getCPA(ad, 'lead');
+  const thumb = ad.creative?.thumbnail_url;
+
+  const tr = document.createElement('tr');
+  tr.className = 'row-ad';
+  tr.dataset.id = ad.id;
+  tr.dataset.parentAdset = adSetId;
+  tr.style.display = 'none';
+  tr.innerHTML = `
+    <td>
+      <div class="name-cell">
+        <label class="toggle-wrap" title="${isActive ? 'Pause' : 'Activate'}">
+          <input type="checkbox" ${isActive ? 'checked' : ''} onchange="quickToggle('ad','${ad.id}',this)">
+          <div class="toggle-track"></div>
+        </label>
+        <span class="expand-placeholder"></span>
+        ${thumb
+          ? `<img class="ad-thumb" src="${thumb}" alt="Creative" />`
+          : `<div class="ad-thumb-placeholder">AD</div>`}
+        <span class="row-name" title="${ad.name}">${ad.name}</span>
+      </div>
+    </td>
+    <td>
+      <div class="delivery ${isActive ? 'del-active' : 'del-paused'}">
+        <div class="del-dot"></div><span>${isActive ? 'Active' : 'Paused'}</span>
+      </div>
+    </td>
+    <td>—</td>
+    <td class="spend-cell">${NZD(spend)}</td>
+    <td>—</td><td>—</td>
+    <td>${fmtN(ins(ad,'reach'))}</td>
+    <td>${fmtN(ins(ad,'impressions'))}</td>
+    <td>${fmtFreq(ins(ad,'frequency'))}</td>
+    <td>${NZD(ins(ad,'cpm'))}</td>
+    <td>${fmtN(ins(ad,'clicks'))}</td>
+    <td>${fmtPct(ins(ad,'ctr'))}</td>
+    <td>${NZD(ins(ad,'cpc'))}</td>
+    <td>${fmtN(purchases)}</td>
+    <td>${NZD(costPurchase)}</td>
+    <td>—</td>
+    <td>${fmtN(leads)}</td>
+    <td>${NZD(costLead)}</td>
+    <td><button class="edit-btn" onclick="openEditModal('ad','${ad.id}',${JSON.stringify(ad).replace(/"/g,'&quot;')})">Edit</button></td>
+  `;
+  return tr;
+}
+
+// ══════════════════════════════════════════
+// EXPAND / COLLAPSE
+// ══════════════════════════════════════════
+async function handleExpand(id, type) {
+  const btn = document.getElementById(`exp-${id}`);
+  const isExpanded = btn.classList.contains('expanded');
+
+  if (isExpanded) {
+    // Collapse
+    const childSel = type === 'campaign' ? `[data-parent-campaign="${id}"]` : `[data-parent-adset="${id}"]`;
+    document.querySelectorAll(childSel).forEach(row => {
+      // Also collapse children of children
+      if (type === 'campaign') {
+        const asId = row.dataset.id;
+        document.querySelectorAll(`[data-parent-adset="${asId}"]`).forEach(r => r.style.display = 'none');
+        const asBtn = document.getElementById(`exp-${asId}`);
+        if (asBtn) asBtn.classList.remove('expanded');
+      }
+      row.style.display = 'none';
+    });
+    btn.classList.remove('expanded');
+    return;
+  }
+
+  // Check if already loaded
+  const childSel = type === 'campaign' ? `[data-parent-campaign="${id}"]` : `[data-parent-adset="${id}"]`;
+  const existing = document.querySelectorAll(childSel);
+  if (existing.length > 0) {
+    existing.forEach(r => r.style.display = 'table-row');
+    btn.classList.add('expanded');
+    return;
+  }
+
+  // Fetch children
+  btn.textContent = '⟳';
+  btn.style.animation = 'spin 0.7s linear infinite';
+  try {
+    const apiType = type === 'campaign' ? 'adsets' : 'ads';
+    const data = await apiGet(apiType, id);
+    const items = data.data || [];
+    const tbody = document.getElementById('ads-tbody');
+
+    // Find the parent row to insert after
+    const parentRow = document.querySelector(`[data-id="${id}"]`);
+    let insertAfter = parentRow;
+    // Insert after any already-existing siblings
+    while (insertAfter.nextSibling && insertAfter.nextSibling.dataset &&
+           (insertAfter.nextSibling.dataset.parentCampaign === id ||
+            insertAfter.nextSibling.dataset.parentAdset === id)) {
+      insertAfter = insertAfter.nextSibling;
+    }
+
+    if (items.length === 0) {
+      const emptyRow = document.createElement('tr');
+      emptyRow.dataset[type === 'campaign' ? 'parentCampaign' : 'parentAdset'] = id;
+      emptyRow.innerHTML = `<td colspan="19" style="text-align:left;padding:10px 14px 10px ${type==='campaign'?'48px':'72px'};font-size:11px;color:var(--muted);font-style:italic;">No ${type === 'campaign' ? 'ad sets' : 'ads'} found.</td>`;
+      insertAfter.insertAdjacentElement('afterend', emptyRow);
+    } else {
+      [...items].reverse().forEach(item => {
+        const row = type === 'campaign' ? buildAdSetRow(item, id) : buildAdRow(item, id);
+        insertAfter.insertAdjacentElement('afterend', row);
+      });
+    }
+    btn.classList.add('expanded');
+  } catch (e) {
+    console.error(e);
+    btn.textContent = '!';
+    setTimeout(() => { btn.textContent = '▶'; btn.style.animation = ''; }, 2000);
+    return;
+  }
+  btn.textContent = '▶';
+  btn.style.animation = '';
+}
+
+// ══════════════════════════════════════════
+// STATUS TOGGLE
+// ══════════════════════════════════════════
+async function quickToggle(type, id, checkbox) {
+  const newStatus = checkbox.checked ? 'ACTIVE' : 'PAUSED';
+  // Optimistic UI — update delivery badge
+  const tr = checkbox.closest('tr');
+  const deliveryEl = tr.querySelector('.delivery');
+  if (deliveryEl) {
+    deliveryEl.className = `delivery ${newStatus === 'ACTIVE' ? 'del-active' : 'del-paused'}`;
+    deliveryEl.innerHTML = `<div class="del-dot"></div><span>${newStatus === 'ACTIVE' ? 'Active' : 'Paused'}</span>`;
+  }
+  try {
+    await apiUpdate(id, { status: newStatus });
+  } catch (e) {
+    // Revert on error
+    checkbox.checked = !checkbox.checked;
+    alert(`Could not update status: ${e.message}`);
+  }
+}
+
+// ══════════════════════════════════════════
+// EDIT MODAL
+// ══════════════════════════════════════════
+function openEditModal(type, id, dataRaw) {
+  const data = typeof dataRaw === 'string' ? JSON.parse(dataRaw.replace(/&quot;/g, '"')) : dataRaw;
+  editTarget = { type, id, data };
+
+  const titles = { campaign: 'Edit Campaign', adset: 'Edit Ad Set', ad: 'Edit Ad' };
+  document.getElementById('edit-modal-title').textContent = titles[type] || 'Edit';
+  document.getElementById('edit-status').className = 'edit-status-msg';
+  document.getElementById('edit-save-btn').disabled = false;
+  document.getElementById('edit-save-btn').textContent = 'Save Changes';
+
+  const body = document.getElementById('edit-modal-body');
+
+  if (type === 'campaign') {
+    const dailyBudgetNZD = data.daily_budget ? (parseInt(data.daily_budget)/100).toFixed(0) : '';
+    const lifetimeBudgetNZD = data.lifetime_budget ? (parseInt(data.lifetime_budget)/100).toFixed(0) : '';
+    body.innerHTML = `
+      <div class="field-group">
+        <div class="field-label">Campaign Name</div>
+        <input class="field-input" id="ef-name" type="text" value="${data.name || ''}" />
+      </div>
+      <div class="field-group">
+        <div class="field-label">Status</div>
+        <select class="field-select" id="ef-status">
+          <option value="ACTIVE" ${data.status==='ACTIVE'?'selected':''}>Active</option>
+          <option value="PAUSED" ${data.status==='PAUSED'?'selected':''}>Paused</option>
+        </select>
+      </div>
+      ${dailyBudgetNZD ? `
+      <div class="field-group">
+        <div class="field-label">Daily Budget (NZD)</div>
+        <input class="field-input" id="ef-daily-budget" type="number" min="1" value="${dailyBudgetNZD}" />
+      </div>` : ''}
+      ${lifetimeBudgetNZD ? `
+      <div class="field-group">
+        <div class="field-label">Lifetime Budget (NZD)</div>
+        <input class="field-input" id="ef-lifetime-budget" type="number" min="1" value="${lifetimeBudgetNZD}" />
+      </div>` : ''}
+    `;
+  } else if (type === 'adset') {
+    const dailyBudgetNZD = data.daily_budget ? (parseInt(data.daily_budget)/100).toFixed(0) : '';
+    body.innerHTML = `
+      <div class="field-group">
+        <div class="field-label">Ad Set Name</div>
+        <input class="field-input" id="ef-name" type="text" value="${data.name || ''}" />
+      </div>
+      <div class="field-group">
+        <div class="field-label">Status</div>
+        <select class="field-select" id="ef-status">
+          <option value="ACTIVE" ${data.status==='ACTIVE'?'selected':''}>Active</option>
+          <option value="PAUSED" ${data.status==='PAUSED'?'selected':''}>Paused</option>
+        </select>
+      </div>
+      ${dailyBudgetNZD ? `
+      <div class="field-group">
+        <div class="field-label">Daily Budget (NZD)</div>
+        <input class="field-input" id="ef-daily-budget" type="number" min="1" value="${dailyBudgetNZD}" />
+      </div>` : ''}
+      ${data.start_time ? `
+      <div class="field-group">
+        <div class="field-label">Start Date</div>
+        <input class="field-input" id="ef-start" type="date" value="${data.start_time.split('T')[0]}" />
+      </div>` : ''}
+      ${data.end_time ? `
+      <div class="field-group">
+        <div class="field-label">End Date</div>
+        <input class="field-input" id="ef-end" type="date" value="${data.end_time.split('T')[0]}" />
+      </div>` : ''}
+    `;
+  } else if (type === 'ad') {
+    const thumb = data.creative?.thumbnail_url;
+    body.innerHTML = `
+      ${thumb ? `
+      <div class="field-group">
+        <div class="field-label">Creative Preview</div>
+        <div class="creative-preview"><img src="${thumb}" alt="Creative" /></div>
+      </div>` : `
+      <div class="field-group">
+        <div class="field-label">Creative Preview</div>
+        <div class="creative-preview"><span class="creative-no-preview">No preview available</span></div>
+      </div>`}
+      <div class="field-group">
+        <div class="field-label">Ad Name</div>
+        <input class="field-input" id="ef-name" type="text" value="${data.name || ''}" />
+      </div>
+      <div class="field-group">
+        <div class="field-label">Status</div>
+        <select class="field-select" id="ef-status">
+          <option value="ACTIVE" ${data.status==='ACTIVE'?'selected':''}>Active</option>
+          <option value="PAUSED" ${data.status==='PAUSED'?'selected':''}>Paused</option>
+        </select>
+      </div>
+    `;
+  }
+
+  document.getElementById('edit-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+async function saveEdit() {
+  if (!editTarget) return;
+  const { type, id } = editTarget;
+  const btn = document.getElementById('edit-save-btn');
+  const statusEl = document.getElementById('edit-status');
+  statusEl.className = 'edit-status-msg';
+
+  const fields = {};
+  const nameEl = document.getElementById('ef-name');
+  const statusEl2 = document.getElementById('ef-status');
+  if (nameEl) fields.name = nameEl.value.trim();
+  if (statusEl2) fields.status = statusEl2.value;
+
+  const dailyEl = document.getElementById('ef-daily-budget');
+  if (dailyEl) fields.daily_budget = Math.round(parseFloat(dailyEl.value) * 100);
+
+  const lifetimeEl = document.getElementById('ef-lifetime-budget');
+  if (lifetimeEl) fields.lifetime_budget = Math.round(parseFloat(lifetimeEl.value) * 100);
+
+  const startEl = document.getElementById('ef-start');
+  if (startEl) fields.start_time = new Date(startEl.value).toISOString();
+
+  const endEl = document.getElementById('ef-end');
+  if (endEl) fields.end_time = new Date(endEl.value).toISOString();
+
+  btn.disabled = true;
+  btn.textContent = 'Saving...';
+  try {
+    await apiUpdate(id, fields);
+    statusEl.className = 'edit-status-msg success';
+    statusEl.textContent = 'Saved successfully.';
+    btn.textContent = 'Saved ✓';
+    // Update DOM name if changed
+    if (fields.name) {
+      const tr = document.querySelector(`[data-id="${id}"]`);
+      if (tr) {
+        const nameSpan = tr.querySelector('.row-name');
+        if (nameSpan) nameSpan.textContent = fields.name;
+      }
+    }
+    setTimeout(() => closeEditModal(), 1500);
+  } catch (e) {
+    statusEl.className = 'edit-status-msg error';
+    statusEl.textContent = e.message;
+    btn.disabled = false;
+    btn.textContent = 'Save Changes';
+  }
+}
+
+function closeEditModal() {
+  document.getElementById('edit-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+  editTarget = null;
+}
+function closeEditOnOverlay(e) {
+  if (e.target === document.getElementById('edit-overlay')) closeEditModal();
+}
+
+// ══════════════════════════════════════════
+// OVERVIEW STATS
+// ══════════════════════════════════════════
+function updateOverview(campaigns) {
+  let totalSpend = 0, totalReach = 0, totalImpressions = 0, totalResults = 0, totalClicks = 0;
+  let spendCount = 0;
+
+  campaigns.forEach(c => {
+    const objMeta = getObjectiveMeta(c.objective);
+    const spend = parseFloat(ins(c,'spend') || 0);
+    const reach = parseInt(ins(c,'reach') || 0);
+    const impr = parseInt(ins(c,'impressions') || 0);
+    const results = parseFloat(getAction(c, objMeta.action) || 0);
+    const clicks = parseInt(ins(c,'clicks') || 0);
+    totalSpend += spend;
+    totalReach += reach;
+    totalImpressions += impr;
+    totalResults += results;
+    totalClicks += clicks;
+    if (spend > 0) spendCount++;
+  });
+
+  document.getElementById('ov-spend').textContent = totalSpend > 0 ? NZD(totalSpend) : '—';
+  document.getElementById('ov-reach').textContent = totalReach > 0 ? fmtN(totalReach) : '—';
+  document.getElementById('ov-impressions').textContent = totalImpressions > 0 ? fmtN(totalImpressions) : '—';
+  document.getElementById('ov-results').textContent = totalResults > 0 ? fmtN(totalResults) : '—';
+  document.getElementById('ov-cpr').textContent = (totalSpend > 0 && totalResults > 0) ? NZD(totalSpend / totalResults) : '—';
+  document.getElementById('ov-clicks').textContent = totalClicks > 0 ? fmtN(totalClicks) : '—';
+  if (totalImpressions > 0 && totalClicks > 0) {
+    document.getElementById('ov-ctr').textContent = `CTR ${fmtPct(totalClicks / totalImpressions * 100)}`;
+  }
+
+  // Sidebar stats
+  const active = campaigns.filter(c => c.status === 'ACTIVE').length;
+  document.getElementById('sb-campaigns').textContent = campaigns.length;
+  document.getElementById('sb-active').textContent = active;
+  document.getElementById('sb-spend').textContent = totalSpend > 0 ? NZD(totalSpend) : '—';
+}
+
+// ══════════════════════════════════════════
+// LOAD CAMPAIGNS
+// ══════════════════════════════════════════
+async function loadCampaigns() {
+  const tbody = document.getElementById('ads-tbody');
+  tbody.innerHTML = '<tr class="loading-row"><td colspan="19"><div class="spinner"></div>Loading campaigns...</td></tr>';
+  document.getElementById('table-summary').textContent = 'Loading campaigns...';
+
+  try {
+    const data = await apiGet('campaigns');
+    const campaigns = data.data || [];
+    campaignData = campaigns;
+    isDemo = false;
+    document.getElementById('demo-badge').style.display = 'none';
+    renderCampaigns(campaigns);
+  } catch (e) {
+    console.warn('API failed, loading demo data:', e.message);
+    isDemo = true;
+    document.getElementById('demo-badge').style.display = 'inline-block';
+    renderCampaigns(DEMO_CAMPAIGNS);
+  }
+}
+
+function renderCampaigns(campaigns) {
+  const tbody = document.getElementById('ads-tbody');
+  tbody.innerHTML = '';
+
+  if (!campaigns.length) {
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="19">No campaigns found for this period.</td></tr>';
+    document.getElementById('table-summary').textContent = 'No campaigns found.';
+    return;
+  }
+
+  campaigns.forEach(c => tbody.appendChild(buildCampaignRow(c)));
+  updateOverview(campaigns);
+
+  const active = campaigns.filter(c => c.status === 'ACTIVE').length;
+  document.getElementById('table-summary').textContent =
+    `${campaigns.length} campaign${campaigns.length !== 1 ? 's' : ''} · ${active} active`;
+}
+
+// ══════════════════════════════════════════
+// DEMO DATA (shown when API not configured)
+// ══════════════════════════════════════════
+const DEMO_CAMPAIGNS = [
+  {
+    id: 'demo-c1', name: 'SIP Panel — Lead Generation NZ',
+    status: 'ACTIVE', objective: 'OUTCOME_LEADS',
+    daily_budget: '5000', lifetime_budget: null,
+    insights: { data: [{
+      spend: '234.56', impressions: '18432', reach: '12043',
+      frequency: '1.53', clicks: '312', ctr: '1.69', cpc: '0.75', cpm: '12.72',
+      actions: [{ action_type: 'lead', value: '23' }],
+      cost_per_action_type: [{ action_type: 'lead', value: '10.20' }]
+    }]}
+  },
+  {
+    id: 'demo-c2', name: 'Snaplock Wall — Website Sales',
+    status: 'ACTIVE', objective: 'OUTCOME_SALES',
+    daily_budget: '10000', lifetime_budget: null,
+    insights: { data: [{
+      spend: '567.89', impressions: '34521', reach: '22340',
+      frequency: '1.55', clicks: '678', ctr: '1.96', cpc: '0.84', cpm: '16.45',
+      actions: [{ action_type: 'purchase', value: '12' }],
+      cost_per_action_type: [{ action_type: 'purchase', value: '47.32' }],
+      purchase_roas: [{ action_device: 'total', value: '3.24' }]
+    }]}
+  },
+  {
+    id: 'demo-c3', name: 'Building Consent — Lead Form',
+    status: 'PAUSED', objective: 'OUTCOME_LEADS',
+    daily_budget: '3000', lifetime_budget: null,
+    insights: { data: [{
+      spend: '89.23', impressions: '7234', reach: '5432',
+      frequency: '1.33', clicks: '98', ctr: '1.35', cpc: '0.91', cpm: '12.34',
+      actions: [{ action_type: 'lead', value: '7' }],
+      cost_per_action_type: [{ action_type: 'lead', value: '12.75' }]
+    }]}
+  }
+];
+
+// ══════════════════════════════════════════
+// KEYBOARD
+// ══════════════════════════════════════════
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeEditModal();
+});
+
+// ══════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════
+loadCampaigns();
+</script>
+</body>
+</html>
