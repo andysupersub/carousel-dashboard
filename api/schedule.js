@@ -7,14 +7,14 @@ module.exports = async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const { caption, imageUrls, videoUrl, platforms, scheduledAt, type } = req.body;
+  const { caption, imageUrls, videoUrl: rawVideoUrl, platforms, scheduledAt, type } = req.body;
 
   if (!caption || !platforms?.length || !scheduledAt) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
 
   // Videos require either a videoUrl or a thumbnail; carousels require imageUrls
-  if (type === 'video' && !videoUrl && !imageUrls?.length) {
+  if (type === 'video' && !rawVideoUrl && !imageUrls?.length) {
     return res.status(400).json({ error: 'Video post requires videoUrl or imageUrls (thumbnail)' });
   }
   if (type !== 'video' && !imageUrls?.length) {
@@ -36,8 +36,8 @@ module.exports = async function handler(req, res) {
     return url;
   };
 
-  // Convert videoUrl if it's a Dropbox link
-  if (videoUrl) videoUrl = toDirectUrl(videoUrl);
+  // Convert Dropbox link to direct download URL
+  const videoUrl = toDirectUrl(rawVideoUrl);
 
   const BUFFER_API_KEY = process.env.BUFFER_API_KEY;
   const CHANNEL_IDS = {
